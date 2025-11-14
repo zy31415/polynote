@@ -68,10 +68,15 @@ Notes must follow this schema:
 
 Every node exposes:
 
+```
 POST /notes
+
 GET /notes
+
 PUT /notes/{id}
+
 DELETE /notes/{id}
+```
 
 All nodes are writable, simulating multi-leader behavior.
 
