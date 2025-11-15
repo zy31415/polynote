@@ -25,7 +25,11 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-web")
+    listOf(
+        "org.springframework.boot:spring-boot-starter-web",
+        "org.xerial:sqlite-jdbc:3.45.2.0"
+    ).forEach { implementation(it) }
+
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

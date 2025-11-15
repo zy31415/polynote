@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polynote-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polynote
+      node-id: a
+  template:
+    metadata:
+      labels:
+        app: polynote
+        node-id: a
+    spec:
+      containers:
+        - name: polynote
+          image: polynote:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ID
+              value: "A"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: role
+                    operator: In
+                    values:
+                      - "polynote-a"
+      volumes:
+        - name: data
+          emptyDir: {}   # Replace with PVC later
