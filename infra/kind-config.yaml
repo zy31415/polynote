@@ -1,0 +1,47 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+
+nodes:
+  - role: control-plane
+
+  #
+  # Worker A → PolyNote-A
+  #
+  - role: worker
+    extraMounts:
+      - hostPath: /Users/zy/workspace/polynote/data/a
+        containerPath: /var/polynote-a
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "role=polynote-a"
+
+  #
+  # Worker B → PolyNote-B
+  #
+  - role: worker
+    extraMounts:
+      - hostPath: /Users/zy/workspace/polynote/data/b
+        containerPath: /var/polynote-b
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "role=polynote-b"
+
+  #
+  # Worker C → PolyNote-C
+  #
+  - role: worker
+    extraMounts:
+      - hostPath: /Users/zy/workspace/polynote/data/c
+        containerPath: /var/polynote-c
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "role=polynote-c"
