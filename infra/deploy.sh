@@ -1,0 +1,1 @@
+kubectl apply -f polynote-A.yml

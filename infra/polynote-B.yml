@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polynote-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polynote
+      node-id: b
+  template:
+    metadata:
+      labels:
+        app: polynote
+        node-id: b
+    spec:
+      containers:
+        - name: polynote
+          image: polynote:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ID
+              value: "B"
+            - name: DB_PATH
+              value: /var/polynote-b/notes.db
+          volumeMounts:
+            - name: polynote-b-data
+              mountPath: /var/polynote-b
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: role
+                    operator: In
+                    values:
+                      - "polynote-b"
+      volumes:
+        - name: polynote-b-data
+          hostPath:
+            path: /var/polynote-b
+            type: DirectoryOrCreate
