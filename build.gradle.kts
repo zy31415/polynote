@@ -25,8 +25,11 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     listOf(
         "org.springframework.boot:spring-boot-starter-web",
+        "org.springframework.boot:spring-boot-starter-jdbc",
+        "org.springframework.boot:spring-boot-starter-validation",
         "org.xerial:sqlite-jdbc:3.45.2.0"
     ).forEach { implementation(it) }
 
