@@ -1,6 +1,7 @@
 package tech.yang_zhang.polynote.service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,6 +41,15 @@ public class ReplicationLogService {
 
     public void recordUpdate(Note note) {
         writeEntry(OperationType.UPDATE, note);
+    }
+
+    public List<ReplicationLogEntry> getReplicationLog(@Nullable String since) {
+        // Placeholder for fetching replication log entries since the given timestamp
+        return List.of();
+    }
+
+    public void replicationSync() {
+        // Placeholder for replication synchronization logic
     }
 
     public void recordDelete(Note note) {
