@@ -75,16 +75,16 @@ EOF
 start_port_forward() {
     echo "Starting PolyNote port forwarding..."
 
-    nohup kubectl port-forward deployment/$DEPLOY_A $PORT_A_LOCAL:$PORT_REMOTE > port-a.log 2>&1 &
+    nohup kubectl port-forward deployment/$DEPLOY_A $PORT_A_LOCAL:$PORT_REMOTE > logs/port-a.log 2>&1 &
     echo "Forward A: localhost:$PORT_A_LOCAL → $DEPLOY_A:$PORT_REMOTE"
 
-    nohup kubectl port-forward deployment/$DEPLOY_B $PORT_B_LOCAL:$PORT_REMOTE > port-b.log 2>&1 &
+    nohup kubectl port-forward deployment/$DEPLOY_B $PORT_B_LOCAL:$PORT_REMOTE > logs/port-b.log 2>&1 &
     echo "Forward B: localhost:$PORT_B_LOCAL → $DEPLOY_B:$PORT_REMOTE"
 
-    nohup kubectl port-forward deployment/$DEPLOY_C $PORT_C_LOCAL:$PORT_REMOTE > port-c.log 2>&1 &
+    nohup kubectl port-forward deployment/$DEPLOY_C $PORT_C_LOCAL:$PORT_REMOTE > logs/port-c.log 2>&1 &
     echo "Forward C: localhost:$PORT_C_LOCAL → $DEPLOY_C:$PORT_REMOTE"
 
-    echo "All forwards started. Logs available in port-*.log"
+    echo "All forwards started. Logs available in logs/port-*.log"
 }
 
 clean_port_forward() {

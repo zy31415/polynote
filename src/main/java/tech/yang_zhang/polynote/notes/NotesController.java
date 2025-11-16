@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import tech.yang_zhang.polynote.notes.dto.CreateNoteRequest;
 import tech.yang_zhang.polynote.notes.dto.NoteResponse;
+import tech.yang_zhang.polynote.notes.dto.UpdateNoteRequest;
 import tech.yang_zhang.polynote.notes.model.Note;
 import tech.yang_zhang.polynote.notes.service.NotesService;
 
@@ -38,9 +39,11 @@ public class NotesController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateNote(@PathVariable String id) {
+    public ResponseEntity<NoteResponse> updateNote(@PathVariable String id,
+                                                   @Valid @RequestBody UpdateNoteRequest request) {
         log.info("PUT /notes/{} invoked", id);
-        return ResponseEntity.accepted().build();
+        Note note = notesService.updateNote(id, request);
+        return ResponseEntity.ok(NoteResponse.from(note));
     }
 
     @DeleteMapping("/{id}")

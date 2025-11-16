@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
 import tech.yang_zhang.polynote.notes.dao.NotesDao;
 import tech.yang_zhang.polynote.notes.dto.CreateNoteRequest;
+import tech.yang_zhang.polynote.notes.dto.UpdateNoteRequest;
 import tech.yang_zhang.polynote.notes.model.Note;
 
 @Service
@@ -31,5 +32,25 @@ public class NotesService {
         );
         notesDao.insert(note);
         return note;
+    }
+
+    public Note updateNote(String id, UpdateNoteRequest request) {
+        Note note = new Note(
+                id,
+                request.title(),
+                request.body(),
+                Instant.now(),
+                properties.podName()
+        );
+        boolean updated = notesDao.update(note);
+        if (!updated) {
+            throw new NoteNotFoundException(id);
+        }
+        return note;
+    }
+
+    public Note getNote(String id) {
+        return notesDao.findById(id)
+                .orElseThrow(() -> new NoteNotFoundException(id));
     }
 }

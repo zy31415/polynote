@@ -19,7 +19,7 @@ spec:
           image: polynote:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: NODE_ID
+            - name: POD_NAME
               value: "B"
             - name: DB_PATH
               value: /var/polynote-b/notes.db
