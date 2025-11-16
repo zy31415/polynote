@@ -30,7 +30,7 @@ public class ReplicationLogDao {
         jdbcTemplate.getJdbcTemplate().execute(
                 "CREATE TABLE IF NOT EXISTS replication_log (" +
                         "op_id TEXT PRIMARY KEY," +
-                        "ts TEXT NOT NULL," +
+                        "ts INTEGER NOT NULL," +
                         "node_id TEXT NOT NULL," +
                         "type TEXT NOT NULL," +
                         "note_id TEXT NOT NULL," +
@@ -45,7 +45,7 @@ public class ReplicationLogDao {
 
         Map<String, Object> params = Map.of(
                 "opId", entry.opId(),
-                "ts", entry.timestamp().toString(),
+                "ts", entry.timestamp().toEpochMilli(),
                 "nodeId", entry.nodeId(),
                 "type", entry.type().name(),
                 "noteId", entry.noteId(),
@@ -78,7 +78,7 @@ public class ReplicationLogDao {
     private ReplicationLogEntry mapRow(ResultSet rs) throws SQLException {
         return new ReplicationLogEntry(
                 rs.getString("op_id"),
-                Instant.parse(rs.getString("ts")),
+                Instant.ofEpochMilli(rs.getLong("ts")),
                 rs.getString("node_id"),
                 OperationType.valueOf(rs.getString("type")),
                 rs.getString("note_id"),
