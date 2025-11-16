@@ -16,10 +16,14 @@ public class NotesService {
 
     private final NotesDao notesDao;
     private final AppEnvironmentProperties properties;
+    private final ReplicationLogService replicationLogService;
 
-    public NotesService(NotesDao notesDao, AppEnvironmentProperties properties) {
+    public NotesService(NotesDao notesDao,
+                        AppEnvironmentProperties properties,
+                        ReplicationLogService replicationLogService) {
         this.notesDao = notesDao;
         this.properties = properties;
+        this.replicationLogService = replicationLogService;
     }
 
     public Note createNote(CreateNoteRequest request) {
@@ -31,6 +35,7 @@ public class NotesService {
                 properties.podName()
         );
         notesDao.insert(note);
+        replicationLogService.recordCreate(note);
         return note;
     }
 

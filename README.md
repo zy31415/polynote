@@ -91,7 +91,7 @@ Every write generates a durable log entry:
 {
   "op_id": "uuid",
   "ts": "logical timestamp or wall clock",
-  "node_id": "A|B|C",
+  "node_id": "A|B|C", 
   "type": "CREATE|UPDATE|DELETE",
   "note_id": "uuid",
   "payload": {}
@@ -276,20 +276,6 @@ Python
 	•	APScheduler for periodic jobs
 
 Both are equally good for this project.
-
-⸻
-
-📁 Suggested Project Structure
-
-polynote/
-  ├── nodeA/
-  ├── nodeB/
-  ├── nodeC/
-  ├── scripts/
-  ├── docs/
-  └── README.md
-
-
 ⸻
 
 🏁 Final Notes
