@@ -57,6 +57,4 @@ public class NotesController {
         notesService.deleteNote(id);
         return ResponseEntity.noContent().build();
     }
-
-
 }
