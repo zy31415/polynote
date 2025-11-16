@@ -54,7 +54,8 @@ public class NotesController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteNote(@PathVariable String id) {
         log.info("DELETE /notes/{} invoked", id);
-        return ResponseEntity.accepted().build();
+        notesService.deleteNote(id);
+        return ResponseEntity.noContent().build();
     }
 
 

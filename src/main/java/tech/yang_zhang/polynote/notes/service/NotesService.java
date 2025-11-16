@@ -57,4 +57,11 @@ public class NotesService {
     public java.util.List<Note> listNotes() {
         return notesDao.findAll();
     }
+
+    public void deleteNote(String id) {
+        boolean deleted = notesDao.delete(id);
+        if (!deleted) {
+            throw new NoteNotFoundException(id);
+        }
+    }
 }

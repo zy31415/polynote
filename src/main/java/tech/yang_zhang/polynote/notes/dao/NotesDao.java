@@ -79,6 +79,11 @@ public class NotesDao {
         return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
     }
 
+    public boolean delete(String id) {
+        String sql = "DELETE FROM notes WHERE id = :id";
+        return jdbcTemplate.update(sql, new MapSqlParameterSource(Map.of("id", id))) > 0;
+    }
+
     private Note mapRow(ResultSet rs) throws SQLException {
         return new Note(
                 rs.getString("id"),
