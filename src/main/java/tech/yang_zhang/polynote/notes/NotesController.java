@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 import tech.yang_zhang.polynote.notes.dto.CreateNoteRequest;
 import tech.yang_zhang.polynote.notes.dto.NoteResponse;
@@ -33,9 +35,12 @@ public class NotesController {
     }
 
     @GetMapping
-    public ResponseEntity<Void> listNotes() {
+    public ResponseEntity<List<NoteResponse>> listNotes() {
         log.info("GET /notes invoked");
-        return ResponseEntity.ok().build();
+        List<NoteResponse> notes = notesService.listNotes().stream()
+                .map(NoteResponse::from)
+                .toList();
+        return ResponseEntity.ok(notes);
     }
 
     @PutMapping("/{id}")

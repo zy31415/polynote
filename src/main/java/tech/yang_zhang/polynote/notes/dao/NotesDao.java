@@ -3,6 +3,7 @@ package tech.yang_zhang.polynote.notes.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,6 +59,11 @@ public class NotesDao {
             }
             return Optional.of(mapRow(rs));
         });
+    }
+
+    public List<Note> findAll() {
+        String sql = "SELECT id, title, body, updated_at, updated_by FROM notes";
+        return jdbcTemplate.getJdbcTemplate().query(sql, (rs, rowNum) -> mapRow(rs));
     }
 
     public boolean update(Note note) {

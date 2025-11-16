@@ -53,4 +53,8 @@ public class NotesService {
         return notesDao.findById(id)
                 .orElseThrow(() -> new NoteNotFoundException(id));
     }
+
+    public java.util.List<Note> listNotes() {
+        return notesDao.findAll();
+    }
 }
