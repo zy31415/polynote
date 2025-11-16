@@ -2,7 +2,6 @@ package tech.yang_zhang.polynote.service;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -44,8 +43,15 @@ public class ReplicationLogService {
     }
 
     public List<ReplicationLogEntry> getReplicationLog(@Nullable String since) {
-        // Placeholder for fetching replication log entries since the given timestamp
-        return List.of();
+        if (since == null || since.isBlank()) {
+            return replicationLogDao.findSince(null);
+        }
+
+        if (replicationLogDao.findByOpId(since).isEmpty()) {
+            throw new IllegalArgumentException("Unknown replication op_id: " + since);
+        }
+
+        return replicationLogDao.findSince(since);
     }
 
     public void replicationSync() {
