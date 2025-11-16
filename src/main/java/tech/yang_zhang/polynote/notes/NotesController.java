@@ -2,8 +2,15 @@ package tech.yang_zhang.polynote.notes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import tech.yang_zhang.polynote.notes.dto.CreateNoteRequest;
+import tech.yang_zhang.polynote.notes.dto.NoteResponse;
+import tech.yang_zhang.polynote.notes.model.Note;
+import tech.yang_zhang.polynote.notes.service.NotesService;
 
 @RestController
 @RequestMapping("/notes")
@@ -11,10 +18,17 @@ public class NotesController {
 
     private static final Logger log = LoggerFactory.getLogger(NotesController.class);
 
+    private final NotesService notesService;
+
+    public NotesController(NotesService notesService) {
+        this.notesService = notesService;
+    }
+
     @PostMapping
-    public ResponseEntity<Void> createNote() {
+    public ResponseEntity<NoteResponse> createNote(@Valid @RequestBody CreateNoteRequest request) {
         log.info("POST /notes invoked");
-        return ResponseEntity.accepted().build();
+        Note note = notesService.createNote(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(NoteResponse.from(note));
     }
 
     @GetMapping
