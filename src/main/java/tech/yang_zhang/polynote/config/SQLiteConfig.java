@@ -16,16 +16,15 @@ import org.sqlite.SQLiteDataSource;
 @Configuration
 public class SQLiteConfig {
 
-    private static final String DB_PATH_ENV = "DB_PATH";
+    private final AppEnvironmentProperties environmentProperties;
+
+    public SQLiteConfig(AppEnvironmentProperties environmentProperties) {
+        this.environmentProperties = environmentProperties;
+    }
 
     @Bean
     public DataSource dataSource() {
-        String dbPath = System.getenv(DB_PATH_ENV);
-        if (dbPath == null || dbPath.isBlank()) {
-            throw new IllegalStateException(DB_PATH_ENV + " environment variable must be set to a writable SQLite file path");
-        }
-
-        Path path = Paths.get(dbPath).toAbsolutePath();
+        Path path = Paths.get(environmentProperties.dbPath()).toAbsolutePath();
         try {
             Path parent = path.getParent();
             if (parent != null) {
