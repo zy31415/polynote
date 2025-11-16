@@ -1,4 +1,4 @@
-package tech.yang_zhang.polynote.notes.service;
+package tech.yang_zhang.polynote.service;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -1,8 +1,8 @@
-package tech.yang_zhang.polynote.notes.dto;
+package tech.yang_zhang.polynote.dto;
 
 import java.time.Instant;
 
-import tech.yang_zhang.polynote.notes.model.Note;
+import tech.yang_zhang.polynote.model.Note;
 
 public record NoteResponse(String id, String title, String body, Instant updatedAt, String updatedBy) {
 

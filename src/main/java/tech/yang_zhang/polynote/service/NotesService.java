@@ -1,4 +1,4 @@
-package tech.yang_zhang.polynote.notes.service;
+package tech.yang_zhang.polynote.service;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -6,10 +6,10 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
-import tech.yang_zhang.polynote.notes.dao.NotesDao;
-import tech.yang_zhang.polynote.notes.dto.CreateNoteRequest;
-import tech.yang_zhang.polynote.notes.dto.UpdateNoteRequest;
-import tech.yang_zhang.polynote.notes.model.Note;
+import tech.yang_zhang.polynote.dao.NotesDao;
+import tech.yang_zhang.polynote.dto.CreateNoteRequest;
+import tech.yang_zhang.polynote.dto.UpdateNoteRequest;
+import tech.yang_zhang.polynote.model.Note;
 
 @Service
 public class NotesService {

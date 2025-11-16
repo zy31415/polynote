@@ -1,4 +1,4 @@
-package tech.yang_zhang.polynote.notes.dto;
+package tech.yang_zhang.polynote.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

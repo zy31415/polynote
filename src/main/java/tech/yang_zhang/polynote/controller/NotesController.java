@@ -1,4 +1,4 @@
-package tech.yang_zhang.polynote.notes;
+package tech.yang_zhang.polynote.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import jakarta.validation.Valid;
-import tech.yang_zhang.polynote.notes.dto.CreateNoteRequest;
-import tech.yang_zhang.polynote.notes.dto.NoteResponse;
-import tech.yang_zhang.polynote.notes.dto.UpdateNoteRequest;
-import tech.yang_zhang.polynote.notes.model.Note;
-import tech.yang_zhang.polynote.notes.service.NotesService;
+import tech.yang_zhang.polynote.dto.CreateNoteRequest;
+import tech.yang_zhang.polynote.dto.NoteResponse;
+import tech.yang_zhang.polynote.dto.UpdateNoteRequest;
+import tech.yang_zhang.polynote.model.Note;
+import tech.yang_zhang.polynote.service.NotesService;
 
 @RestController
 @RequestMapping("/notes")

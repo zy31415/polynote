@@ -1,4 +1,4 @@
-package tech.yang_zhang.polynote.notes.dao;
+package tech.yang_zhang.polynote.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,7 +12,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import jakarta.annotation.PostConstruct;
-import tech.yang_zhang.polynote.notes.model.Note;
+import tech.yang_zhang.polynote.model.Note;
 
 @Repository
 public class NotesDao {

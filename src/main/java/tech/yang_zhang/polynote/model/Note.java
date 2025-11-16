@@ -1,4 +1,4 @@
-package tech.yang_zhang.polynote.notes.model;
+package tech.yang_zhang.polynote.model;
 
 import java.time.Instant;
 
