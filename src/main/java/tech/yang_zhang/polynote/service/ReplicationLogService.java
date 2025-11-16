@@ -1,12 +1,14 @@
 package tech.yang_zhang.polynote.service;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
@@ -40,8 +42,8 @@ public class ReplicationLogService {
         writeEntry(OperationType.UPDATE, note);
     }
 
-    public void recordDelete(String noteId) {
-        writeEntry(OperationType.DELETE, noteId, null);
+    public void recordDelete(Note note) {
+        writeEntry(OperationType.DELETE, note);
     }
 
     private void writeEntry(OperationType type, Note note) {

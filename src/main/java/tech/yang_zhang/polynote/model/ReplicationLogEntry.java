@@ -1,5 +1,6 @@
 package tech.yang_zhang.polynote.model;
 
+
 import java.time.Instant;
 
 public record ReplicationLogEntry(

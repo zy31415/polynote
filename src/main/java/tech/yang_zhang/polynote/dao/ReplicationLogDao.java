@@ -35,6 +35,7 @@ public class ReplicationLogDao {
     public void insert(ReplicationLogEntry entry) {
         String sql = "INSERT INTO replication_log (op_id, ts, node_id, type, note_id, payload) " +
                 "VALUES (:opId, :ts, :nodeId, :type, :noteId, :payload)";
+
         Map<String, Object> params = Map.of(
                 "opId", entry.opId(),
                 "ts", entry.timestamp().toString(),

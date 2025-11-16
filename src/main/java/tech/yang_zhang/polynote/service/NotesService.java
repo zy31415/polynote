@@ -60,10 +60,14 @@ public class NotesService {
     }
 
     public void deleteNote(String id) {
+        Note note = notesDao.findById(id)
+                .orElseThrow(() -> new NoteNotFoundException(id));
+
         boolean deleted = notesDao.delete(id);
         if (!deleted) {
-            throw new NoteNotFoundException(id);
+            throw new IllegalStateException("Failed to delete note with id=" + id);
         }
-        replicationLogService.recordDelete(id);
+
+        replicationLogService.recordDelete(note);
     }
 }
