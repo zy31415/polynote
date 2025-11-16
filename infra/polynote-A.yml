@@ -21,9 +21,11 @@ spec:
           env:
             - name: NODE_ID
               value: "A"
+            - name: DB_PATH
+              value: /var/polynote-a/notes.db
           volumeMounts:
-            - name: data
-              mountPath: /data
+            - name: polynote-a-data
+              mountPath: /var/polynote-a
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -34,5 +36,7 @@ spec:
                     values:
                       - "polynote-a"
       volumes:
-        - name: data
-          emptyDir: {}   # Replace with PVC later
+        - name: polynote-a-data
+          hostPath:
+            path: /var/polynote-a
+            type: DirectoryOrCreate
