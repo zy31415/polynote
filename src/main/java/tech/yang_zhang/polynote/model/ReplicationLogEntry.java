@@ -6,7 +6,7 @@ public record ReplicationLogEntry(
         String opId,
         Instant timestamp,
         String nodeId,
-        String type,
+        OperationType type,
         String noteId,
         String payload
 ) {}

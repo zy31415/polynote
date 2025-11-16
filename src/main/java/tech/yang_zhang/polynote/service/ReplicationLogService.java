@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
 import tech.yang_zhang.polynote.dao.ReplicationLogDao;
 import tech.yang_zhang.polynote.model.Note;
+import tech.yang_zhang.polynote.model.OperationType;
 import tech.yang_zhang.polynote.model.ReplicationLogEntry;
 
 @Service
@@ -32,10 +33,10 @@ public class ReplicationLogService {
     }
 
     public void recordCreate(Note note) {
-        writeEntry("CREATE", note);
+        writeEntry(OperationType.CREATE, note);
     }
 
-    private void writeEntry(String type, Note note) {
+    private void writeEntry(OperationType type, Note note) {
         String payload = serialize(note);
         ReplicationLogEntry entry = new ReplicationLogEntry(
                 UUID.randomUUID().toString(),

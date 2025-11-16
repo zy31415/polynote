@@ -39,7 +39,7 @@ public class ReplicationLogDao {
                 "opId", entry.opId(),
                 "ts", entry.timestamp().toString(),
                 "nodeId", entry.nodeId(),
-                "type", entry.type(),
+                "type", entry.type().name(),
                 "noteId", entry.noteId(),
                 "payload", entry.payload()
         );
