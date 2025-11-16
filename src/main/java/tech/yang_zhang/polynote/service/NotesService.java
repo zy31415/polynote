@@ -51,12 +51,8 @@ public class NotesService {
         if (!updated) {
             throw new NoteNotFoundException(id);
         }
+        replicationLogService.recordUpdate(note);
         return note;
-    }
-
-    public Note getNote(String id) {
-        return notesDao.findById(id)
-                .orElseThrow(() -> new NoteNotFoundException(id));
     }
 
     public java.util.List<Note> listNotes() {
@@ -68,5 +64,6 @@ public class NotesService {
         if (!deleted) {
             throw new NoteNotFoundException(id);
         }
+        replicationLogService.recordDelete(id);
     }
 }

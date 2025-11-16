@@ -36,18 +36,29 @@ public class ReplicationLogService {
         writeEntry(OperationType.CREATE, note);
     }
 
+    public void recordUpdate(Note note) {
+        writeEntry(OperationType.UPDATE, note);
+    }
+
+    public void recordDelete(String noteId) {
+        writeEntry(OperationType.DELETE, noteId, null);
+    }
+
     private void writeEntry(OperationType type, Note note) {
-        String payload = serialize(note);
+        writeEntry(type, note.id(), serialize(note));
+    }
+
+    private void writeEntry(OperationType type, String noteId, String payload) {
         ReplicationLogEntry entry = new ReplicationLogEntry(
                 UUID.randomUUID().toString(),
                 Instant.now(),
                 properties.podName(),
                 type,
-                note.id(),
+                noteId,
                 payload
         );
         replicationLogDao.insert(entry);
-        log.info("Replication log entry recorded: type={} noteId={} opId={}", type, note.id(), entry.opId());
+        log.info("Replication log entry recorded: type={} noteId={} opId={}", type, noteId, entry.opId());
     }
 
     private String serialize(Note note) {
