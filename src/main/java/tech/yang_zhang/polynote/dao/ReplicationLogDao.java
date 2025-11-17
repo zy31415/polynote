@@ -75,6 +75,12 @@ public class ReplicationLogDao {
         });
     }
 
+    public long findMaxTimestamp() {
+        Long maxTs = jdbcTemplate.getJdbcTemplate()
+                .queryForObject("SELECT MAX(ts) FROM replication_log", Long.class);
+        return maxTs != null ? maxTs : 0L;
+    }
+
     private ReplicationLogEntry mapRow(ResultSet rs) throws SQLException {
         return new ReplicationLogEntry(
                 rs.getString("op_id"),
