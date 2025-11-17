@@ -54,8 +54,9 @@ public class ReplicationLogService {
         return replicationLogDao.findSince(since);
     }
 
-    public void replicationSync() {
-        // Placeholder for replication synchronization logic
+    public void replicationSync(String nodeId) {
+        log.info("Replication sync triggered for nodeId={}", nodeId);
+
     }
 
     public void recordDelete(Note note) {

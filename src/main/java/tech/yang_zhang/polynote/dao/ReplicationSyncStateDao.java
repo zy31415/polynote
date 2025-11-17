@@ -24,7 +24,7 @@ public class ReplicationSyncStateDao {
                 "CREATE TABLE IF NOT EXISTS replication_sync_state (" +
                         "node_id TEXT PRIMARY KEY," +
                         "last_synced_op_id TEXT," +
-                        "updated_at TEXT NOT NULL" +
+                        "last_synced_ts TEXT NOT NULL" +
                         ")"
         );
     }
@@ -40,16 +40,16 @@ public class ReplicationSyncStateDao {
     }
 
     public void updateLastSyncedOpId(String nodeId, String opId) {
-        String sql = "INSERT INTO replication_sync_state (node_id, last_synced_op_id, updated_at) " +
+        String sql = "INSERT INTO replication_sync_state (node_id, last_synced_op_id, last_synced_ts) " +
                 "VALUES (:nodeId, :opId, :updatedAt) " +
                 "ON CONFLICT(node_id) DO UPDATE SET " +
                 "last_synced_op_id = excluded.last_synced_op_id, " +
-                "updated_at = excluded.updated_at";
+                "last_synced_ts = excluded.last_synced_ts";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("nodeId", nodeId)
                 .addValue("opId", opId)
-                .addValue("updatedAt", Instant.now().toString());
+                .addValue("last_synced_ts", /* todo: implement*/ null);
 
         jdbcTemplate.update(sql, params);
     }

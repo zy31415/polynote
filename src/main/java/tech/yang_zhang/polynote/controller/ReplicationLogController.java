@@ -4,11 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -39,10 +35,10 @@ public class ReplicationLogController {
         }
     }
 
-    @PostMapping("/sync")
-    public ResponseEntity<Void> triggerReplicationSync() {
-        log.info("POST /replication/sync invoked");
-        replicationLogService.replicationSync();
+    @PutMapping("/sync/{id}")
+    public ResponseEntity<Void> triggerReplicationSync(@PathVariable String id) {
+        log.info("PUT /replication/sync/{} invoked", id);
+        replicationLogService.replicationSync(id);
         return ResponseEntity.accepted().build();
     }
 }
