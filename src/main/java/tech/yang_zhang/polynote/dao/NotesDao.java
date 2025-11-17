@@ -44,7 +44,7 @@ public class NotesDao {
                 "id", note.id(),
                 "title", note.title(),
                 "body", note.body(),
-                "updatedAt", note.updatedAt().toEpochMilli(),
+                "updatedAt", note.updatedAt(),
                 "updatedBy", note.updatedBy()
         );
 
@@ -73,7 +73,7 @@ public class NotesDao {
                 "id", note.id(),
                 "title", note.title(),
                 "body", note.body(),
-                "updatedAt", note.updatedAt().toEpochMilli(),
+                "updatedAt", note.updatedAt(),
                 "updatedBy", note.updatedBy()
         );
         return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
@@ -89,7 +89,7 @@ public class NotesDao {
                 rs.getString("id"),
                 rs.getString("title"),
                 rs.getString("body"),
-                Instant.ofEpochMilli(rs.getLong("updated_at")),
+                rs.getLong("updated_at"),
                 rs.getString("updated_by")
         );
     }

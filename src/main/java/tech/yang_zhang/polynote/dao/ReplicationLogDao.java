@@ -1,20 +1,18 @@
 package tech.yang_zhang.polynote.dao;
 
+import jakarta.annotation.PostConstruct;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Repository;
+import tech.yang_zhang.polynote.model.OperationType;
+import tech.yang_zhang.polynote.model.ReplicationLogEntry;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Repository;
-
-import jakarta.annotation.PostConstruct;
-import org.springframework.lang.Nullable;
-import tech.yang_zhang.polynote.model.ReplicationLogEntry;
-import tech.yang_zhang.polynote.model.OperationType;
 
 @Repository
 public class ReplicationLogDao {
@@ -45,7 +43,7 @@ public class ReplicationLogDao {
 
         Map<String, Object> params = Map.of(
                 "opId", entry.opId(),
-                "ts", entry.timestamp().toEpochMilli(),
+                "ts", entry.timestamp(),
                 "nodeId", entry.nodeId(),
                 "type", entry.type().name(),
                 "noteId", entry.noteId(),
@@ -84,7 +82,7 @@ public class ReplicationLogDao {
     private ReplicationLogEntry mapRow(ResultSet rs) throws SQLException {
         return new ReplicationLogEntry(
                 rs.getString("op_id"),
-                Instant.ofEpochMilli(rs.getLong("ts")),
+                rs.getLong("ts"),
                 rs.getString("node_id"),
                 OperationType.valueOf(rs.getString("type")),
                 rs.getString("note_id"),

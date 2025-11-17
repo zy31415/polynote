@@ -5,7 +5,7 @@ import java.time.Instant;
 
 public record ReplicationLogEntry(
         String opId,
-        Instant timestamp,
+        Long timestamp,
         String nodeId,
         OperationType type,
         String noteId,

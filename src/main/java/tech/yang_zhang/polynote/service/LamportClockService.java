@@ -9,9 +9,11 @@ public class LamportClockService {
     private long counter;
 
     public LamportClockService(ReplicationLogDao replicationLogDao) {
-        this.counter = replicationLogDao.findMaxTimestamp();
+        this.counter = replicationLogDao.findMaxTimestamp() + 1;
     }
 
+    // todo: even though the methods are synchronized, there is still a race condition
+    // need to implement a better locking mechanism to avoid it
     public synchronized long getCurrentTime() {
         return counter;
     }

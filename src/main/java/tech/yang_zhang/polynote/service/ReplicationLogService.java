@@ -28,7 +28,8 @@ public class ReplicationLogService {
 
     public ReplicationLogService(ReplicationLogDao replicationLogDao,
                                  AppEnvironmentProperties properties,
-                                 ObjectMapper objectMapper) {
+                                 ObjectMapper objectMapper,
+                                 LamportClockService lamportClockService) {
         this.replicationLogDao = replicationLogDao;
         this.properties = properties;
         this.objectMapper = objectMapper;
@@ -56,28 +57,27 @@ public class ReplicationLogService {
 
     public void replicationSync(String nodeId) {
         log.info("Replication sync triggered for nodeId={}", nodeId);
-
     }
 
-    public void recordDelete(Note note) {
-        writeEntry(OperationType.DELETE, note);
+    public void recordDelete(Note note, long time) {
+        writeEntry(OperationType.DELETE, note.id(), serialize(note), time);
     }
 
     private void writeEntry(OperationType type, Note note) {
-        writeEntry(type, note.id(), serialize(note));
+        writeEntry(type, note.id(), serialize(note), note.updatedAt());
     }
 
-    private void writeEntry(OperationType type, String noteId, String payload) {
+    private void writeEntry(OperationType type, String noteId, String payload, Long time) {
         ReplicationLogEntry entry = new ReplicationLogEntry(
                 UUID.randomUUID().toString(),
-                Instant.now(),
+                time,
                 properties.podName(),
                 type,
                 noteId,
                 payload
         );
         replicationLogDao.insert(entry);
-        log.info("Replication log entry recorded: type={} noteId={} opId={}", type, noteId, entry.opId());
+        log.info("Replication log entry recorded: type={} noteId={} opId={} time={}", type, noteId, entry.opId(), time);
     }
 
     private String serialize(Note note) {
