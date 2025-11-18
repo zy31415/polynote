@@ -49,7 +49,7 @@ public class ReplicationSyncStateDao {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("nodeId", nodeId)
                 .addValue("opId", opId)
-                .addValue("last_synced_ts", /* todo: implement*/ null);
+                .addValue("updatedAt", Instant.now().toString());
 
         jdbcTemplate.update(sql, params);
     }

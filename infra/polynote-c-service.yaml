@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: polynote-c
+spec:
+  selector:
+    app: polynote
+    node-id: c
+  ports:
+    - port: 8080
+      targetPort: 8080

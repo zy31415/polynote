@@ -25,14 +25,17 @@ public class ReplicationLogService {
     private final ReplicationLogDao replicationLogDao;
     private final AppEnvironmentProperties properties;
     private final ObjectMapper objectMapper;
+    private final ReplicationSyncService replicationSyncService;
 
     public ReplicationLogService(ReplicationLogDao replicationLogDao,
                                  AppEnvironmentProperties properties,
                                  ObjectMapper objectMapper,
-                                 LamportClockService lamportClockService) {
+                                 LamportClockService lamportClockService,
+                                 ReplicationSyncService replicationSyncService) {
         this.replicationLogDao = replicationLogDao;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.replicationSyncService = replicationSyncService;
     }
 
     public void recordCreate(Note note) {
@@ -57,6 +60,7 @@ public class ReplicationLogService {
 
     public void replicationSync(String nodeId) {
         log.info("Replication sync triggered for nodeId={}", nodeId);
+        replicationSyncService.sync(nodeId);
     }
 
     public void recordDelete(Note note, long time) {
