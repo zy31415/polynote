@@ -37,6 +37,7 @@ public class ReplicationSyncService {
         Optional<String> lastSyncedOpId = replicationSyncStateDao.findLastSyncedOpId(nodeId);
         URI remoteLogUri = buildReplicationLogUri(nodeId, lastSyncedOpId.orElse(null));
 
+        log.info("Fetching replication log from nodeId={} at URI={}", nodeId, remoteLogUri);
         List<ReplicationLogEntry> remoteEntries = fetchRemoteLog(remoteLogUri);
         if (remoteEntries.isEmpty()) {
             log.info("No new replication entries from nodeId={}", nodeId);
@@ -70,7 +71,8 @@ public class ReplicationSyncService {
     }
 
     private URI buildReplicationLogUri(String nodeId, @Nullable String sinceOpId) {
-        String baseUrl = "http://polynote-" + nodeId.toLowerCase();
+        // todo: need a better way to manage peer addresses
+        String baseUrl = "http://polynote-" + nodeId.toLowerCase() + ":8080";
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .path("/replication/log");
         if (sinceOpId != null && !sinceOpId.isBlank()) {
