@@ -29,7 +29,7 @@ public class NotesService {
 
     public Note createNote(CreateNoteRequest request) {
         // todo: not thread safe. Need to lock current time first
-        long time = lamportClockService.getCurrentTime();
+        long time = lamportClockService.getTime();
         Note note = new Note(
                 UUID.randomUUID().toString(),
                 request.title(),
@@ -39,13 +39,12 @@ public class NotesService {
         );
         notesDao.insert(note);
         replicationLogService.recordCreate(note);
-        lamportClockService.tick();
         return note;
     }
 
     public Note updateNote(String id, UpdateNoteRequest request) {
         // todo: not thread safe. Need to lock current time first
-        long time = lamportClockService.getCurrentTime();
+        long time = lamportClockService.getTime();
         Note note = new Note(
                 id,
                 request.title(),
@@ -59,7 +58,6 @@ public class NotesService {
             throw new NoteNotFoundException(id);
         }
         replicationLogService.recordUpdate(note);
-        lamportClockService.tick();
         return note;
     }
 
@@ -68,14 +66,13 @@ public class NotesService {
                 .orElseThrow(() -> new NoteNotFoundException(id));
 
         // todo: not thread safe. Need to lock current time first
-        long time = lamportClockService.getCurrentTime();
+        long time = lamportClockService.getTime();
         boolean deleted = notesDao.delete(id);
         if (!deleted) {
             throw new IllegalStateException("Failed to delete note with id=" + id);
         }
 
         replicationLogService.recordDelete(note, time);
-        lamportClockService.tick();
     }
 
     public java.util.List<Note> listNotes() {

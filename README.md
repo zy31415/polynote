@@ -200,35 +200,6 @@ GET /debug/conflicts
 
 ⸻
 
-🐳 Container Image
-
-Build the runnable jar and Docker image locally:
-
-```
-docker build -t polynote:latest .
-```
-
-Run it:
-
-```
-docker run --rm -p 8080:8080 polynote:latest
-```
-
-Then hit `http://localhost:8080/notes` using the dummy APIs.
-
-For local Kubernetes testing (e.g., with KIND) keep cluster definitions and manifests in `infra/`. Example to load the image into a KIND cluster:
-
-```
-kind create cluster --config infra/kind-config.yaml
-kind load docker-image polynote:latest
-```
-
-Deploy via your preferred manifests/Helm chart referencing the `polynote:latest` image or a registry-pushed tag.
-
-These help visualize system state and replication behavior.
-
-⸻
-
 10. 🎖️ Bonus Features (Advanced)
 
 If you want to go deeper:
@@ -263,19 +234,12 @@ A complete test suite should include:
 
 ⸻
 
-🏗️ Suggested Tech Stack
+🏗️ Tech Stack
 
 Java
 	•	Spring Boot
-	•	SQLite or H2
-	•	Scheduled tasks for replication
-
-Python
-	•	FastAPI or Flask
 	•	SQLite
-	•	APScheduler for periodic jobs
 
-Both are equally good for this project.
 ⸻
 
 🏁 Final Notes
