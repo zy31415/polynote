@@ -29,7 +29,7 @@ public class NotesController {
 
     @PostMapping
     public ResponseEntity<NoteResponse> createNote(@Valid @RequestBody CreateNoteRequest request) {
-        log.info("POST /notes invoked");
+        log.info("POST /notes invoked - testing deployment 2");
         Note note = notesService.createNote(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(NoteResponse.from(note));
     }

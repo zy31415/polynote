@@ -37,7 +37,7 @@ public class ReplicationLogController {
 
     @PutMapping("/sync/{id}")
     public ResponseEntity<Void> triggerReplicationSync(@PathVariable String id) {
-        log.info("PUT /replication/sync/{} invoked", id);
+        log.info("PUT /replication/sync/{} invoked. Sync with node {}", id, id);
         replicationLogService.replicationSync(id);
         return ResponseEntity.accepted().build();
     }
