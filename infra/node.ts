@@ -1,6 +1,7 @@
 import * as k8s from "@pulumi/kubernetes";
+import * as pulumi from "@pulumi/pulumi";
 
-export function createPolynoteNode(suffix: string) {
+export function createPolynoteNode(suffix: string, imageName: pulumi.Input<string>) {
     const name = `polynote-${suffix}`;
     const labels = { app: "polynote", "node-id": suffix };
     const podName = suffix.toUpperCase();
@@ -10,7 +11,7 @@ export function createPolynoteNode(suffix: string) {
 
     const container = {
         name: "polynote",
-        image: "polynote:latest",
+        image: imageName,
         imagePullPolicy: "IfNotPresent",
         env: [
             { name: "POD_NAME", value: podName },
