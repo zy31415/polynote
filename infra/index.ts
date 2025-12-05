@@ -1,13 +1,21 @@
-import {createPolynoteNode} from "./node";
+import { createPolynoteNode } from "./node";
 
-const nodeA = createPolynoteNode("a");
-export const deploymentNameNodeA = nodeA.deployment.metadata.name;
-export const serviceNameNodeA = nodeA.service.metadata.name;
+const suffixes = ["a", "b", "c"] as const;
 
-const nodeB = createPolynoteNode("b");
-export const deploymentNameNodeB = nodeB.deployment.metadata.name;
-export const serviceNameNodeB = nodeB.service.metadata.name;
+const polynoteNodes = Object.fromEntries(
+    suffixes.map((suffix) => [suffix, createPolynoteNode(suffix)])
+) as Record<(typeof suffixes)[number], ReturnType<typeof createPolynoteNode>>;
 
-const nodeC = createPolynoteNode("c");
-export const deploymentNameNodeC = nodeC.deployment.metadata.name;
-export const serviceNameNodeC = nodeC.service.metadata.name;
+export const deploymentNames = Object.fromEntries(
+    Object.entries(polynoteNodes).map(([suffix, { deployment }]) => [
+        suffix,
+        deployment.metadata.name,
+    ])
+);
+
+export const serviceNames = Object.fromEntries(
+    Object.entries(polynoteNodes).map(([suffix, { service }]) => [
+        suffix,
+        service.metadata.name,
+    ])
+);
