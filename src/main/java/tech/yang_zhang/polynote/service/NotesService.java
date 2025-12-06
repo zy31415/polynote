@@ -1,6 +1,7 @@
 package tech.yang_zhang.polynote.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
 import tech.yang_zhang.polynote.dao.NotesDao;
 import tech.yang_zhang.polynote.dto.CreateNoteRequest;
@@ -27,8 +28,8 @@ public class NotesService {
         this.lamportClockService = lamportClockService;
     }
 
+    @Transactional
     public Note createNote(CreateNoteRequest request) {
-        // todo: not thread safe. Need to lock current time first
         long time = lamportClockService.getTime();
         Note note = new Note(
                 UUID.randomUUID().toString(),
@@ -37,13 +38,13 @@ public class NotesService {
                 time,
                 properties.podName()
         );
-        notesDao.insert(note);
+        // todo: note creation and replication log entry should be in a transaction
         replicationLogService.recordCreate(note);
+        notesDao.insert(note);
         return note;
     }
 
     public Note updateNote(String id, UpdateNoteRequest request) {
-        // todo: not thread safe. Need to lock current time first
         long time = lamportClockService.getTime();
         Note note = new Note(
                 id,
@@ -53,6 +54,7 @@ public class NotesService {
                 properties.podName()
         );
 
+        // todo: note update and replication log entry should be in a transaction
         boolean updated = notesDao.update(note);
         if (!updated) {
             throw new NoteNotFoundException(id);
@@ -62,10 +64,9 @@ public class NotesService {
     }
 
     public void deleteNote(String id) {
+        // todo: note deletion and replication log entry should be in a transaction
         Note note = notesDao.findById(id)
                 .orElseThrow(() -> new NoteNotFoundException(id));
-
-        // todo: not thread safe. Need to lock current time first
         long time = lamportClockService.getTime();
         boolean deleted = notesDao.delete(id);
         if (!deleted) {
