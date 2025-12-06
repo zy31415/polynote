@@ -28,6 +28,13 @@ public class NotesService {
         this.lamportClockService = lamportClockService;
     }
 
+    /**
+     * Create a new note.
+     *  It's important this method is transactional to ensure consistency between note creation and replication log entry.
+     *
+     * @param request the request containing note details
+     * @return the created note
+     */
     @Transactional
     public Note createNote(CreateNoteRequest request) {
         long time = lamportClockService.getTime();
