@@ -45,12 +45,12 @@ public class NotesService {
                 time,
                 properties.podName()
         );
-        // todo: note creation and replication log entry should be in a transaction
-        replicationLogService.recordCreate(note);
         notesDao.insert(note);
+        replicationLogService.recordCreate(note);
         return note;
     }
 
+    @Transactional
     public Note updateNote(String id, UpdateNoteRequest request) {
         long time = lamportClockService.getTime();
         Note note = new Note(
