@@ -83,6 +83,7 @@ public class NotesService {
         replicationLogService.recordDelete(note, time);
     }
 
+    @Transactional(readOnly = true)
     public java.util.List<Note> listNotes() {
         return notesDao.findAll();
     }
