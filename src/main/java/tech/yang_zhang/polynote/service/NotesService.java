@@ -70,6 +70,25 @@ public class NotesService {
     }
 
     @Transactional
+    public Note updateNoteAtTs(long ts, String id, UpdateNoteRequest request) {
+        long time = lamportClockService.getTime();
+        Note note = new Note(
+                id,
+                request.title(),
+                request.body(),
+                time,
+                properties.podName()
+        );
+
+        boolean updated = notesDao.updateAtTs(ts, note);
+        if (!updated) {
+            throw new NoteNotFoundException(id);
+        }
+        replicationLogService.recordUpdate(note);
+        return note;
+    }
+
+    @Transactional
     public void deleteNote(String id) {
         long time = lamportClockService.getTime();
         Note note = notesDao.deleteAndReturn(id);

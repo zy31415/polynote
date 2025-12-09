@@ -51,6 +51,22 @@ public class NotesController {
         return ResponseEntity.ok(NoteResponse.from(note));
     }
 
+    /**
+     * Update note at specific timestamp. This ensures that no lost update.
+     * @param id
+     * @param ts
+     * @param request
+     * @return
+     */
+    @PutMapping("/{ts}/{id}")
+    public ResponseEntity<NoteResponse> updateNoteAtTs(@PathVariable long ts,
+                                                       @PathVariable String id,
+                                                       @Valid @RequestBody UpdateNoteRequest request) {
+        log.info("PUT /notes/{}/{} invoked", ts, id);
+        Note note = notesService.updateNoteAtTs(ts, id, request);
+        return ResponseEntity.ok(NoteResponse.from(note));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteNote(@PathVariable String id) {
         log.info("DELETE /notes/{} invoked", id);

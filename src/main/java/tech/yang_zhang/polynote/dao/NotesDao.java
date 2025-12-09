@@ -69,6 +69,20 @@ public class NotesDao {
         return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
     }
 
+    public boolean updateAtTs(long ts, Note note) {
+        String sql = "UPDATE notes SET title = :title, body = :body, updated_at = :updatedAt, updated_by = :updatedBy " +
+                "WHERE id = :id AND updated_at = :ts";
+        Map<String, Object> params = Map.of(
+                "id", note.id(),
+                "title", note.title(),
+                "body", note.body(),
+                "updatedAt", note.updatedAt(),
+                "updatedBy", note.updatedBy(),
+                "ts", ts
+        );
+        return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
+    }
+
     public Note deleteAndReturn(String id) {
         String sql = "DELETE FROM notes WHERE id = :id RETURNING id, title, body, updated_at, updated_by";
         return jdbcTemplate.query(sql, Map.of("id", id), (ResultSet rs) -> {
