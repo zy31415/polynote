@@ -43,28 +43,31 @@ public class NotesController {
         return ResponseEntity.ok(notes);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<NoteResponse> updateNote(@PathVariable String id,
-                                                   @Valid @RequestBody UpdateNoteRequest request) {
-        log.info("PUT /notes/{} invoked", id);
-        Note note = notesService.updateNote(id, request);
-        return ResponseEntity.ok(NoteResponse.from(note));
-    }
-
     /**
-     * Update note at specific timestamp. This ensures that no lost update.
+     * Update note at specific timestamp or force update.
      * @param id
      * @param ts
+     * @param force
      * @param request
      * @return
      */
-    @PutMapping("/{ts}/{id}")
-    public ResponseEntity<NoteResponse> updateNoteAtTs(@PathVariable long ts,
-                                                       @PathVariable String id,
+    @PutMapping("/{id}")
+    public ResponseEntity<NoteResponse> updateNoteAtTs(@PathVariable String id,
+                                                       @RequestParam(value = "ts", required = false) Long ts,
+                                                       @RequestParam(value = "force", defaultValue = "false") boolean force,
                                                        @Valid @RequestBody UpdateNoteRequest request) {
-        log.info("PUT /notes/{}/{} invoked", ts, id);
-        Note note = notesService.updateNoteAtTs(ts, id, request);
-        return ResponseEntity.ok(NoteResponse.from(note));
+        log.info("PUT /notes/{}?ts={} & force={} invoked", id, ts, force);
+        Note note;
+        if (ts != null) {
+            note = notesService.updateNoteAtTs(ts, id, request);
+            return ResponseEntity.ok(NoteResponse.from(note));
+        }
+        if (force) {
+            note = notesService.updateNote(id, request);
+            log.warn("Force UPDATE note is called");
+            return ResponseEntity.ok(NoteResponse.from(note));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @DeleteMapping("/{id}")
