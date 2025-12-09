@@ -52,10 +52,10 @@ public class NotesController {
      * @return
      */
     @PutMapping("/{id}")
-    public ResponseEntity<NoteResponse> updateNoteAtTs(@PathVariable String id,
-                                                       @RequestParam(value = "ts", required = false) Long ts,
-                                                       @RequestParam(value = "force", defaultValue = "false") boolean force,
-                                                       @Valid @RequestBody UpdateNoteRequest request) {
+    public ResponseEntity<NoteResponse> updateNote(@PathVariable String id,
+                                                   @RequestParam(value = "ts", required = false) Long ts,
+                                                   @RequestParam(value = "force", defaultValue = "false") boolean force,
+                                                   @Valid @RequestBody UpdateNoteRequest request) {
         log.info("PUT /notes/{}?ts={} & force={} invoked", id, ts, force);
         Note note;
         if (ts != null) {
@@ -71,9 +71,19 @@ public class NotesController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNote(@PathVariable String id) {
-        log.info("DELETE /notes/{} invoked", id);
-        notesService.deleteNote(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteNote(@PathVariable String id,
+                                           @RequestParam(value = "ts", required = false) Long ts,
+                                           @RequestParam(value = "force", defaultValue = "false") boolean force) {
+        log.info("DELETE /notes/{}?ts={} & force={} invoked", id, ts, force);
+        if (ts != null) {
+            notesService.deleteNoteAtTs(ts, id);
+            return ResponseEntity.noContent().build();
+        }
+        if (force) {
+            notesService.deleteNote(id);
+            log.warn("Force DELETE note is called");
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 }

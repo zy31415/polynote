@@ -85,7 +85,20 @@ public class NotesDao {
 
     public Note deleteAndReturn(String id) {
         String sql = "DELETE FROM notes WHERE id = :id RETURNING id, title, body, updated_at, updated_by";
-        return jdbcTemplate.query(sql, Map.of("id", id), (ResultSet rs) -> {
+        return deleteWithParams(sql, new MapSqlParameterSource(Map.of("id", id)), id);
+    }
+
+    public Note deleteAtTsAndReturn(String id, long ts) {
+        String sql = "DELETE FROM notes WHERE id = :id AND updated_at = :ts RETURNING id, title, body, updated_at, updated_by";
+        Map<String, Object> params = Map.of(
+                "id", id,
+                "ts", ts
+        );
+        return deleteWithParams(sql, new MapSqlParameterSource(params), id);
+    }
+
+    private Note deleteWithParams(String sql, MapSqlParameterSource params, String id) {
+        return jdbcTemplate.query(sql, params, (ResultSet rs) -> {
             if (!rs.next()) {
                 return null;
             }

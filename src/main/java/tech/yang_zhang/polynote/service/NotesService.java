@@ -89,6 +89,16 @@ public class NotesService {
     }
 
     @Transactional
+    public void deleteNoteAtTs(long ts, String id) {
+        long time = lamportClockService.getTime();
+        Note note = notesDao.deleteAtTsAndReturn(id, ts);
+        if (note == null) {
+            throw new NoteNotFoundException(id);
+        }
+        replicationLogService.recordDelete(note, time);
+    }
+
+    @Transactional
     public void deleteNote(String id) {
         long time = lamportClockService.getTime();
         Note note = notesDao.deleteAndReturn(id);
