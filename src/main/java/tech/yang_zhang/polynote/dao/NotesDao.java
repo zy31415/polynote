@@ -51,16 +51,6 @@ public class NotesDao {
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
-    public Optional<Note> findById(String id) {
-        String sql = "SELECT id, title, body, updated_at, updated_by FROM notes WHERE id = :id";
-        return jdbcTemplate.query(sql, Map.of("id", id), (ResultSet rs) -> {
-            if (!rs.next()) {
-                return Optional.empty();
-            }
-            return Optional.of(mapRow(rs));
-        });
-    }
-
     public List<Note> findAll() {
         String sql = "SELECT id, title, body, updated_at, updated_by FROM notes";
         return jdbcTemplate.getJdbcTemplate().query(sql, (rs, rowNum) -> mapRow(rs));
@@ -79,9 +69,19 @@ public class NotesDao {
         return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
     }
 
-    public boolean delete(String id) {
-        String sql = "DELETE FROM notes WHERE id = :id";
-        return jdbcTemplate.update(sql, new MapSqlParameterSource(Map.of("id", id))) > 0;
+    public Note deleteAndReturn(String id) {
+        String sql = "DELETE FROM notes WHERE id = :id RETURNING id, title, body, updated_at, updated_by";
+        return jdbcTemplate.query(sql, Map.of("id", id), (ResultSet rs) -> {
+            if (!rs.next()) {
+                return null;
+            }
+            Note result = mapRow(rs);
+            if (rs.next()) {
+                // This should never happen since id is primary key. If it does, a 500 return code will be shown.
+                throw new IllegalStateException("Multiple rows returned when deleting note with id=" + id);
+            }
+            return result;
+        });
     }
 
     private Note mapRow(ResultSet rs) throws SQLException {

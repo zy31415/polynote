@@ -1,5 +1,6 @@
 package tech.yang_zhang.polynote.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,7 @@ public class SQLiteConfig {
         this.environmentProperties = environmentProperties;
     }
 
+    // todo: break it down into multiple datasource beans
     @Bean
     public DataSource dataSource() {
         Path path = Paths.get(environmentProperties.dbPath()).toAbsolutePath();
@@ -40,8 +42,12 @@ public class SQLiteConfig {
             throw new IllegalStateException("Unable to create directories for DB_PATH at " + path, e);
         }
 
-        SQLiteDataSource ds = new SQLiteDataSource();
-        ds.setUrl("jdbc:sqlite:" + path);
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl("jdbc:sqlite:" + path);
+        ds.setPoolName("polynote-sqlite-pool");
+        ds.setMaximumPoolSize(5);
+        ds.setMinimumIdle(1);
+        ds.setConnectionTestQuery("SELECT 1");
 
         // Configure WAL mode on this database
         enableWalMode(ds);

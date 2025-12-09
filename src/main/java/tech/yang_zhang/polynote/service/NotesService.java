@@ -61,7 +61,6 @@ public class NotesService {
                 properties.podName()
         );
 
-        // todo: note update and replication log entry should be in a transaction
         boolean updated = notesDao.update(note);
         if (!updated) {
             throw new NoteNotFoundException(id);
@@ -70,16 +69,13 @@ public class NotesService {
         return note;
     }
 
+    @Transactional
     public void deleteNote(String id) {
-        // todo: note deletion and replication log entry should be in a transaction
-        Note note = notesDao.findById(id)
-                .orElseThrow(() -> new NoteNotFoundException(id));
         long time = lamportClockService.getTime();
-        boolean deleted = notesDao.delete(id);
-        if (!deleted) {
-            throw new IllegalStateException("Failed to delete note with id=" + id);
+        Note note = notesDao.deleteAndReturn(id);
+        if (note == null) {
+            throw new NoteNotFoundException(id);
         }
-
         replicationLogService.recordDelete(note, time);
     }
 

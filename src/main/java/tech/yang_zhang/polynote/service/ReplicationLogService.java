@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
 import tech.yang_zhang.polynote.dao.ReplicationLogDao;
 import tech.yang_zhang.polynote.model.Note;
@@ -81,7 +84,17 @@ public class ReplicationLogService {
                 payload
         );
         replicationLogDao.insert(entry);
-        log.info("Replication log entry recorded: type={} noteId={} opId={} time={}", type, noteId, entry.opId(), time);
+
+        // Register afterCommit synchronization to log after transaction commits
+        // This ensures that the log is only recorded if the surrounding transaction is successful
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        log.info("Replication log entry recorded: type={} noteId={} opId={} time={}", type, noteId, entry.opId(), time);
+                    }
+                }
+        );
     }
 
     private String serialize(Note note) {
