@@ -5,9 +5,22 @@
 The "kind-config.yml" sets up a local Kubernetes cluster with 3 nodes for testing PolyNote.
 
 
+
 ## Kind cluster dev process
 
-Note that docker building is also managed by Pulumi. To deploy changes to the Kind cluster:
+0) Prerequisites
+* Pulumi 
+
+Pulumi is used to build docker image and deploy them into the kind cluster.
+
+To install Pulumi: `brew install pulumi/tap/pulumi`
+
+Login to start use Pulumi: `pulumi login --local`
+
+* Kind
+Use Kind to create local k8s cluster for testing.
+
+To deploy changes to the Kind cluster:
 
 1) Edit code
 2) Commit changes so that a new sha is generated, i.e. `git rev-parse --short HEAD` is refreshed.
