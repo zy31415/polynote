@@ -52,14 +52,14 @@ public class ReplicationLogDao {
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
-    public List<ReplicationLogEntry> findSince(@Nullable String sinceOpIdExclusive) {
+    public List<ReplicationLogEntry> findSince(@Nullable Integer sinceTsExclusive) {
         StringBuilder sql = new StringBuilder("SELECT op_id, ts, node_id, type, note_id, payload FROM replication_log");
         MapSqlParameterSource params = new MapSqlParameterSource();
-        if (sinceOpIdExclusive != null && !sinceOpIdExclusive.isBlank()) {
-            sql.append(" WHERE ts > (SELECT ts FROM replication_log WHERE op_id = :sinceOpId)");
-            params.addValue("sinceOpId", sinceOpIdExclusive);
+        if (sinceTsExclusive != null) {
+            sql.append(" WHERE ts > :sinceTsExclusive");
+            params.addValue("sinceTsExclusive", sinceTsExclusive);
         }
-        sql.append(" ORDER BY ts ASC, op_id ASC");
+        sql.append(" ORDER BY ts ASC");
         return jdbcTemplate.query(sql.toString(), params, (rs, rowNum) -> mapRow(rs));
     }
 

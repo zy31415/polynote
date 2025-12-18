@@ -49,15 +49,8 @@ public class ReplicationLogService {
         writeEntry(OperationType.UPDATE, note);
     }
 
-    public List<ReplicationLogEntry> getReplicationLog(@Nullable String since) {
-        if (since == null || since.isBlank()) {
-            return replicationLogDao.findSince(null);
-        }
-
-        if (replicationLogDao.findByOpId(since).isEmpty()) {
-            throw new IllegalArgumentException("Unknown replication op_id: " + since);
-        }
-
+    public List<ReplicationLogEntry> getReplicationLog(@Nullable Integer since) {
+        // todo: is using time stamp a good idea?
         return replicationLogDao.findSince(since);
     }
 

@@ -25,7 +25,7 @@ public class ReplicationLogController {
     }
 
     @GetMapping("/log")
-    public ResponseEntity<List<ReplicationLogEntry>> getReplicationLog(@RequestParam(name = "since", required = false) String since) {
+    public ResponseEntity<List<ReplicationLogEntry>> getReplicationLog(@RequestParam(name = "since", required = false) Integer since) {
         log.info("GET /replication/log invoked with since={}", since);
         try {
             List<ReplicationLogEntry> entries = replicationLogService.getReplicationLog(since);
