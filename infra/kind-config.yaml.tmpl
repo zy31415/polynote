@@ -4,12 +4,12 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
 
-  #
-  # Worker A → PolyNote-A
-  #
+    #
+    # Worker A → PolyNote-A
+    #
   - role: worker
     extraMounts:
-      - hostPath: /Users/zy/workspace/polynote/data/a
+      - hostPath: ${POLYNOTE_DATA_DIR}/a
         containerPath: /var/polynote-a
     kubeadmConfigPatches:
       - |
@@ -23,7 +23,7 @@ nodes:
   #
   - role: worker
     extraMounts:
-      - hostPath: /Users/zy/workspace/polynote/data/b
+      - hostPath: ${POLYNOTE_DATA_DIR}/b
         containerPath: /var/polynote-b
     kubeadmConfigPatches:
       - |
@@ -37,7 +37,7 @@ nodes:
   #
   - role: worker
     extraMounts:
-      - hostPath: /Users/zy/workspace/polynote/data/c
+      - hostPath: ${POLYNOTE_DATA_DIR}/c
         containerPath: /var/polynote-c
     kubeadmConfigPatches:
       - |

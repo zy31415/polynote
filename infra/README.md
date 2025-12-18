@@ -29,6 +29,11 @@ If you set up pulumi for the first time, run `pulumi install` first.
 * Kind
 
 Use Kind to create local k8s cluster for testing.
+Run the following script to setup the kind cluster:
+
+```
+./setup_kind_cluster.sh
+```
 
 To deploy changes to the Kind cluster:
 
