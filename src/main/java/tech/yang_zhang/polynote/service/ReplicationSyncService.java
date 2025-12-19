@@ -36,6 +36,7 @@ public class ReplicationSyncService {
         log.info("Starting replication sync with nodeId={}", nodeId);
 
         Optional<Long> lastSyncedSeq = replicationSyncStateDao.findLastSyncedSeq(nodeId);
+        log.debug("lastSyncedSeq={}", lastSyncedSeq);
         URI remoteLogUri = buildReplicationLogUri(nodeId, lastSyncedSeq.orElse(null));
 
         log.info("Fetching replication log from nodeId={} at URI={}", nodeId, remoteLogUri);
@@ -51,10 +52,14 @@ public class ReplicationSyncService {
             // TODO: Apply the remote mutation to the local store and surface conflicts.
             // for each log entry:
             //  1. update Lamport clock atomically using getAndUpdate.
-            //  2. append log and apply mutation (should be in a transaction)
+            //  2. In one transaction:
+            //     a. apply the mutation to the local note store
+            //     b. insert the replication log entry into local replication log table
+            //     c. update the last synced seq for the remote node
             //  Question: how does the updated Lamport clock get reflected in the log entry?
         }
 
+        // todo: in the above loop, we should update lastSyncedSeq incrementally instead of at the end.
         Long latestSeq = remoteEntries.get(remoteEntries.size() - 1).seq();
         if (latestSeq == null) {
             throw new IllegalStateException("Remote replication entry missing sequence value");
