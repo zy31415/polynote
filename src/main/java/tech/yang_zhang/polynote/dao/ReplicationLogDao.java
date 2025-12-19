@@ -27,7 +27,8 @@ public class ReplicationLogDao {
     void initializeSchema() {
         jdbcTemplate.getJdbcTemplate().execute(
                 "CREATE TABLE IF NOT EXISTS replication_log (" +
-                        "op_id TEXT PRIMARY KEY," +
+                        "seq INTEGER PRIMARY KEY AUTO_INCREMENT," +
+                        "op_id TEXT NOT NULL UNIQUE," +
                         "ts INTEGER NOT NULL," +
                         "node_id TEXT NOT NULL," +
                         "type TEXT NOT NULL," +
