@@ -32,10 +32,11 @@ public class ReplicationSyncService {
     }
 
     public void sync(String nodeId) {
+        // todo: should the whole sync operation in a transaction? Probably not - why?
         log.info("Starting replication sync with nodeId={}", nodeId);
 
-        Optional<String> lastSyncedOpId = replicationSyncStateDao.findLastSyncedOpId(nodeId);
-        URI remoteLogUri = buildReplicationLogUri(nodeId, lastSyncedOpId.orElse(null));
+        Optional<Long> lastSyncedSeq = replicationSyncStateDao.findLastSyncedSeq(nodeId);
+        URI remoteLogUri = buildReplicationLogUri(nodeId, lastSyncedSeq.orElse(null));
 
         log.info("Fetching replication log from nodeId={} at URI={}", nodeId, remoteLogUri);
         List<ReplicationLogEntry> remoteEntries = fetchRemoteLog(remoteLogUri);
@@ -45,16 +46,23 @@ public class ReplicationSyncService {
         }
 
         for (ReplicationLogEntry entry : remoteEntries) {
-            log.info("Fetched remote opId={} type={} noteId={} from nodeId={}",
-                    entry.opId(), entry.type(), entry.noteId(), nodeId);
+            log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
+                    entry.seq(), entry.opId(), entry.ts(), entry.nodeId(), entry.type(), entry.payload());
             // TODO: Apply the remote mutation to the local store and surface conflicts.
+            // for each log entry:
+            //  1. update Lamport clock atomically using getAndUpdate.
+            //  2. append log and apply mutation (should be in a transaction)
+            //  Question: how does the updated Lamport clock get reflected in the log entry?
         }
 
-        String latestOpId = remoteEntries.get(remoteEntries.size() - 1).opId();
-        replicationSyncStateDao.updateLastSyncedOpId(nodeId, latestOpId);
+        Long latestSeq = remoteEntries.get(remoteEntries.size() - 1).seq();
+        if (latestSeq == null) {
+            throw new IllegalStateException("Remote replication entry missing sequence value");
+        }
+        replicationSyncStateDao.updateLastSyncedSeq(nodeId, latestSeq);
 
-        log.info("Replication sync completed for nodeId={} with {} entries. lastSyncedOpId={}.",
-                nodeId, remoteEntries.size(), latestOpId);
+        log.info("Replication sync completed for nodeId={} with {} entries. lastSyncedSeq={}.",
+                nodeId, remoteEntries.size(), latestSeq);
     }
 
     private List<ReplicationLogEntry> fetchRemoteLog(URI requestUri) {
@@ -70,13 +78,14 @@ public class ReplicationSyncService {
         }
     }
 
-    private URI buildReplicationLogUri(String nodeId, @Nullable String sinceOpId) {
+    // todo: consider grpc call instead http
+    private URI buildReplicationLogUri(String nodeId, @Nullable Long seq) {
         // todo: need a better way to manage peer addresses
         String baseUrl = "http://polynote-" + nodeId.toLowerCase() + ":8080";
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .path("/replication/log");
-        if (sinceOpId != null && !sinceOpId.isBlank()) {
-            builder.queryParam("since", sinceOpId);
+        if (seq != null) {
+            builder.queryParam("since", seq);
         }
         return builder.build().toUri();
     }

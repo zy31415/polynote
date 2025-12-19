@@ -12,7 +12,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
 import tech.yang_zhang.polynote.dao.ReplicationLogDao;
@@ -49,8 +48,7 @@ public class ReplicationLogService {
         writeEntry(OperationType.UPDATE, note);
     }
 
-    public List<ReplicationLogEntry> getReplicationLog(@Nullable Integer since) {
-        // todo: is using time stamp a good idea?
+    public List<ReplicationLogEntry> getReplicationLog(@Nullable Long since) {
         return replicationLogDao.findSince(since);
     }
 
@@ -69,6 +67,7 @@ public class ReplicationLogService {
 
     private void writeEntry(OperationType type, String noteId, String payload, Long time) {
         ReplicationLogEntry entry = new ReplicationLogEntry(
+                null,
                 UUID.randomUUID().toString(),
                 time,
                 properties.podName(),

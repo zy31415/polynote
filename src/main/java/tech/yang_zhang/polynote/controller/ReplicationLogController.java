@@ -25,7 +25,7 @@ public class ReplicationLogController {
     }
 
     @GetMapping("/log")
-    public ResponseEntity<List<ReplicationLogEntry>> getReplicationLog(@RequestParam(name = "since", required = false) Integer since) {
+    public ResponseEntity<List<ReplicationLogEntry>> getReplicationLog(@RequestParam(name = "since", required = false) Long since) {
         log.info("GET /replication/log invoked with since={}", since);
         try {
             List<ReplicationLogEntry> entries = replicationLogService.getReplicationLog(since);
@@ -35,10 +35,10 @@ public class ReplicationLogController {
         }
     }
 
-    @PutMapping("/sync/{id}")
-    public ResponseEntity<Void> triggerReplicationSync(@PathVariable String id) {
-        log.info("PUT /replication/sync/{} invoked. Sync with node {}", id, id);
-        replicationLogService.replicationSync(id);
+    @PutMapping("/sync/{nodeId}")
+    public ResponseEntity<Void> triggerReplicationSync(@PathVariable String nodeId) {
+        log.info("PUT /replication/sync/{} invoked. Sync with node {}", nodeId, nodeId);
+        replicationLogService.replicationSync(nodeId);
         return ResponseEntity.accepted().build();
     }
 }

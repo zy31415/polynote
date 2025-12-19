@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Repository
 public class ReplicationLogDao {
@@ -27,7 +26,7 @@ public class ReplicationLogDao {
     void initializeSchema() {
         jdbcTemplate.getJdbcTemplate().execute(
                 "CREATE TABLE IF NOT EXISTS replication_log (" +
-                        "seq INTEGER PRIMARY KEY AUTO_INCREMENT," +
+                        "seq INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "op_id TEXT NOT NULL UNIQUE," +
                         "ts INTEGER NOT NULL," +
                         "node_id TEXT NOT NULL," +
@@ -44,7 +43,7 @@ public class ReplicationLogDao {
 
         Map<String, Object> params = Map.of(
                 "opId", entry.opId(),
-                "ts", entry.timestamp(),
+                "ts", entry.ts(),
                 "nodeId", entry.nodeId(),
                 "type", entry.type().name(),
                 "noteId", entry.noteId(),
@@ -53,25 +52,15 @@ public class ReplicationLogDao {
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
-    public List<ReplicationLogEntry> findSince(@Nullable Integer sinceTsExclusive) {
-        StringBuilder sql = new StringBuilder("SELECT op_id, ts, node_id, type, note_id, payload FROM replication_log");
+    public List<ReplicationLogEntry> findSince(@Nullable Long sinceSeqExclusive) {
+        StringBuilder sql = new StringBuilder("SELECT seq, op_id, ts, node_id, type, note_id, payload FROM replication_log");
         MapSqlParameterSource params = new MapSqlParameterSource();
-        if (sinceTsExclusive != null) {
-            sql.append(" WHERE ts > :sinceTsExclusive");
-            params.addValue("sinceTsExclusive", sinceTsExclusive);
+        if (sinceSeqExclusive != null) {
+            sql.append(" WHERE seq > :sinceSeqExclusive");
+            params.addValue("sinceSeqExclusive", sinceSeqExclusive);
         }
-        sql.append(" ORDER BY ts ASC");
+        sql.append(" ORDER BY seq ASC");
         return jdbcTemplate.query(sql.toString(), params, (rs, rowNum) -> mapRow(rs));
-    }
-
-    public Optional<ReplicationLogEntry> findByOpId(String opId) {
-        String sql = "SELECT op_id, ts, node_id, type, note_id, payload FROM replication_log WHERE op_id = :opId";
-        return jdbcTemplate.query(sql, Map.of("opId", opId), rs -> {
-            if (!rs.next()) {
-                return Optional.empty();
-            }
-            return Optional.of(mapRow(rs));
-        });
     }
 
     public long findMaxTimestamp() {
@@ -82,6 +71,7 @@ public class ReplicationLogDao {
 
     private ReplicationLogEntry mapRow(ResultSet rs) throws SQLException {
         return new ReplicationLogEntry(
+                rs.getLong("seq"),
                 rs.getString("op_id"),
                 rs.getLong("ts"),
                 rs.getString("node_id"),
