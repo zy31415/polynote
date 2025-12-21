@@ -70,6 +70,7 @@ public class NotesController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
+    // todo: tomestone instead of actuall deletion from database. This way, deletion can be treated as update.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteNote(@PathVariable String id,
                                            @RequestParam(value = "ts", required = false) Long ts,

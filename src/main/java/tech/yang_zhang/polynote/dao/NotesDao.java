@@ -51,6 +51,21 @@ public class NotesDao {
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
+    public void insertOrIgnore(Note note) {
+        String sql = "INSERT OR IGNORE INTO notes (id, title, body, updated_at, updated_by) " +
+                "VALUES (:id, :title, :body, :updatedAt, :updatedBy)";
+
+        Map<String, Object> params = Map.of(
+                "id", note.id(),
+                "title", note.title(),
+                "body", note.body(),
+                "updatedAt", note.updatedAt(),
+                "updatedBy", note.updatedBy()
+        );
+
+        jdbcTemplate.update(sql, new MapSqlParameterSource(params));
+    }
+
     public List<Note> findAll() {
         String sql = "SELECT id, title, body, updated_at, updated_by FROM notes";
         return jdbcTemplate.getJdbcTemplate().query(sql, (rs, rowNum) -> mapRow(rs));

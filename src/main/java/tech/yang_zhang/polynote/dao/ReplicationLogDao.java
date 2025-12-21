@@ -52,6 +52,21 @@ public class ReplicationLogDao {
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
+    public void insertOrIgnore(ReplicationLogEntry entry) {
+        String sql = "INSERT OR IGNORE INTO replication_log (op_id, ts, node_id, type, note_id, payload) " +
+                "VALUES (:opId, :ts, :nodeId, :type, :noteId, :payload)";
+
+        Map<String, Object> params = Map.of(
+                "opId", entry.opId(),
+                "ts", entry.ts(),
+                "nodeId", entry.nodeId(),
+                "type", entry.type().name(),
+                "noteId", entry.noteId(),
+                "payload", entry.payload()
+        );
+        jdbcTemplate.update(sql, new MapSqlParameterSource(params));
+    }
+
     public List<ReplicationLogEntry> findSince(@Nullable Long sinceSeqExclusive) {
         StringBuilder sql = new StringBuilder("SELECT seq, op_id, ts, node_id, type, note_id, payload FROM replication_log");
         MapSqlParameterSource params = new MapSqlParameterSource();

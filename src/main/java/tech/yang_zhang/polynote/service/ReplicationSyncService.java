@@ -23,12 +23,18 @@ public class ReplicationSyncService {
     private static final Logger log = LoggerFactory.getLogger(ReplicationSyncService.class);
 
     private final ReplicationSyncStateDao replicationSyncStateDao;
+    private final ReplicationLogService replicationLogService;
     private final RestTemplate restTemplate;
+    private final LamportClockService lamportClockService;
 
     public ReplicationSyncService(ReplicationSyncStateDao replicationSyncStateDao,
-                                  RestTemplateBuilder restTemplateBuilder) {
+                                  RestTemplateBuilder restTemplateBuilder,
+                                  LamportClockService lamportClockService,
+                                  ReplicationLogService replicationLogService) {
         this.replicationSyncStateDao = replicationSyncStateDao;
         this.restTemplate = restTemplateBuilder.build();
+        this.lamportClockService = lamportClockService;
+        this.replicationLogService = replicationLogService;
     }
 
     public void sync(String nodeId) {
@@ -49,7 +55,7 @@ public class ReplicationSyncService {
         for (ReplicationLogEntry entry : remoteEntries) {
             log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
                     entry.seq(), entry.opId(), entry.ts(), entry.nodeId(), entry.type(), entry.payload());
-            // TODO: Apply the remote mutation to the local store and surface conflicts.
+
             // for each log entry:
             //  1. update Lamport clock atomically using getAndUpdate.
             //  2. In one transaction:
@@ -57,6 +63,8 @@ public class ReplicationSyncService {
             //     b. insert the replication log entry into local replication log table
             //     c. update the last synced seq for the remote node
             //  Question: how does the updated Lamport clock get reflected in the log entry?
+            lamportClockService.setTime(entry.ts());
+            replicationLogService.applyReplicationLog(entry);
         }
 
         // todo: in the above loop, we should update lastSyncedSeq incrementally instead of at the end.

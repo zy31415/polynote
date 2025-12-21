@@ -17,4 +17,8 @@ public class LamportClockService {
         // Using updateAndGet to ensure atomic read-modify-write
         return logicalTime.updateAndGet(value -> value + 1);
     }
+
+    public void setTime(long externalTime) {
+        logicalTime.updateAndGet(value -> Math.max(value, externalTime));
+    }
 }
