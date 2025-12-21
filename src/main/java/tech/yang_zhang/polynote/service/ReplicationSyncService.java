@@ -36,7 +36,7 @@ public class ReplicationSyncService {
     // todo: think about if this is truly service code or domain logic code?
     //  For now, the class exists for the only purpose of transaction management.
     @Transactional
-    public void applyReplicationLog(ReplicationLogEntry entry) {
+    public void processReplicationLog(ReplicationLogEntry entry) {
         Note note;
         try {
             note = objectMapper.readValue(entry.payload(), Note.class);
@@ -47,23 +47,33 @@ public class ReplicationSyncService {
         switch (entry.type()) {
             case CREATE -> {
                 // todo: insert log first. If insert is ignored, then skip applying the mutation.
-                replicationLogDao.insertOrIgnore(entry);
+                appendLog(entry);
                 notesDao.insertOrIgnore(note);
             }
             case UPDATE -> {
 
-                replicationLogDao.insertOrIgnore(entry);
+                appendLog(entry);
                 // todo: handle update conflicts?
                 notesDao.updateAtTs(entry.ts(), note);
 
             }
             case DELETE -> {
                 // todo: ensure that arguments are correct
+                appendLog(entry);
                 notesDao.deleteAndReturn(entry.noteId(), entry.ts(), note.updatedAt(), entry.nodeId());
-                replicationLogDao.insertOrIgnore(entry);
+
             }
             default -> throw new IllegalArgumentException("Unknown operation type: " + entry.type());
         }
         replicationSyncStateDao.updateLastSyncedSeq(entry.nodeId(), entry.seq());
+    }
+
+    private void appendLog(ReplicationLogEntry entry) {
+        replicationLogDao.insertOrIgnore(entry);
+    }
+
+    // todo: use this method
+    private void applyMutation(ReplicationLogEntry entry) {
+        // todo: add implementation
     }
 }

@@ -37,7 +37,7 @@ public class NotesService {
      */
     @Transactional
     public Note createNote(CreateNoteRequest request) {
-        long time = lamportClockService.getTime();
+        long time = lamportClockService.tick();
         Note note = new Note(
                 UUID.randomUUID().toString(),
                 request.title(),
@@ -53,7 +53,7 @@ public class NotesService {
 
     @Transactional
     public Note updateNote(String id, UpdateNoteRequest request) {
-        long time = lamportClockService.getTime();
+        long time = lamportClockService.tick();
         Note note = new Note(
                 id,
                 request.title(),
@@ -73,7 +73,7 @@ public class NotesService {
 
     @Transactional
     public Note updateNoteAtTs(long ts, String id, UpdateNoteRequest request) {
-        long time = lamportClockService.getTime();
+        long time = lamportClockService.tick();
         Note note = new Note(
                 id,
                 request.title(),
@@ -93,7 +93,7 @@ public class NotesService {
 
     @Transactional
     public void deleteNoteAtTs(String id, long ts) {
-        long currentTime = lamportClockService.getTime();
+        long currentTime = lamportClockService.tick();
         Note note = notesDao.deleteAndReturn(id, ts, currentTime, properties.podName());
         if (note == null) {
             throw new NoteNotFoundException(id);
@@ -103,7 +103,7 @@ public class NotesService {
 
     @Transactional
     public void deleteNote(String id) {
-        long time = lamportClockService.getTime();
+        long time = lamportClockService.tick();
         Note note = notesDao.deleteAndReturn(id, time, properties.podName());
         if (note == null) {
             throw new NoteNotFoundException(id);

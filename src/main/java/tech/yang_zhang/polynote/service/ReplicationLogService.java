@@ -138,8 +138,13 @@ public class ReplicationLogService {
             //     b. insert the replication log entry into local replication log table
             //     c. update the last synced seq for the remote node
             //  Question: how does the updated Lamport clock get reflected in the log entry?
-            lamportClockService.setTime(entry.ts());
-            replicationSyncService.applyReplicationLog(entry);
+
+            // Note: the ts here is not recorded in the system but only logged. This ts represents the event of receiving a remote log.
+            //  Technically, it's OK to not tick the clock here.
+            Long ts = lamportClockService.syncAndTick(entry.ts());
+            log.info("Remote log opId={} is received at time={}", entry.opId(), ts);
+
+            replicationSyncService.processReplicationLog(entry);
         }
 
         // todo: in the above loop, we should update lastSyncedSeq incrementally instead of at the end.

@@ -13,12 +13,12 @@ public class LamportClockService {
         this.logicalTime.set(replicationLogDao.findMaxTimestamp());
     }
 
-    public long getTime() {
+    public long tick() {
         // Using updateAndGet to ensure atomic read-modify-write
-        return logicalTime.updateAndGet(value -> value + 1);
+        return logicalTime.incrementAndGet();
     }
 
-    public void setTime(long externalTime) {
-        logicalTime.updateAndGet(value -> Math.max(value, externalTime));
+    public long syncAndTick(long externalTime) {
+        return logicalTime.updateAndGet(value -> Math.max(value, externalTime) + 1);
     }
 }
