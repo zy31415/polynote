@@ -1,26 +1,29 @@
 package tech.yang_zhang.polynote.service;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
-import tech.yang_zhang.polynote.dao.NotesDao;
 import tech.yang_zhang.polynote.dao.ReplicationLogDao;
 import tech.yang_zhang.polynote.dao.ReplicationSyncStateDao;
 import tech.yang_zhang.polynote.model.Note;
 import tech.yang_zhang.polynote.model.OperationType;
 import tech.yang_zhang.polynote.model.ReplicationLogEntry;
+
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ReplicationLogService {
@@ -28,24 +31,27 @@ public class ReplicationLogService {
     private static final Logger log = LoggerFactory.getLogger(ReplicationLogService.class);
 
     private final ReplicationLogDao replicationLogDao;
-    private final NotesDao notesDao;
     private final AppEnvironmentProperties properties;
     private final ObjectMapper objectMapper;
-    private final ReplicationSyncService replicationSyncService;
     private final ReplicationSyncStateDao replicationSyncStateDao;
+    private final LamportClockService lamportClockService;
+    private final ReplicationSyncService replicationSyncService;
+    private final RestTemplate restTemplate;
 
     public ReplicationLogService(ReplicationLogDao replicationLogDao,
                                  AppEnvironmentProperties properties,
                                  ObjectMapper objectMapper,
+                                 ReplicationSyncStateDao replicationSyncStateDao,
+                                 LamportClockService lamportClockService,
                                  ReplicationSyncService replicationSyncService,
-                                 NotesDao notesDao,
-                                 ReplicationSyncStateDao replicationSyncStateDao) {
+                                 RestTemplateBuilder restTemplateBuilder) {
+        this.replicationSyncService = replicationSyncService;
         this.replicationSyncStateDao = replicationSyncStateDao;
-        this.notesDao = notesDao;
         this.replicationLogDao = replicationLogDao;
         this.properties = properties;
         this.objectMapper = objectMapper;
-        this.replicationSyncService = replicationSyncService;
+        this.lamportClockService = lamportClockService;
+        this.restTemplate = restTemplateBuilder.build();
     }
 
     public void recordCreate(Note note) {
@@ -62,7 +68,7 @@ public class ReplicationLogService {
 
     public void replicationSync(String nodeId) {
         log.info("Replication sync triggered for nodeId={}", nodeId);
-        replicationSyncService.sync(nodeId);
+        sync(nodeId);
     }
 
     public void recordDelete(Note note, long time) {
@@ -105,36 +111,71 @@ public class ReplicationLogService {
         }
     }
 
-    @Transactional
-    public void applyReplicationLog(ReplicationLogEntry entry) {
-        Note note;
-        try {
-            note = objectMapper.readValue(entry.payload(), Note.class);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to deserialize note from replication log entry", e);
+    // todo: rethink about this function. Should it be service code or domain logic code?
+    public void sync(String nodeId) {
+        // todo: should the whole sync operation in a transaction? Probably not - why?
+        log.info("Starting replication sync with nodeId={}", nodeId);
+
+        Optional<Long> lastSyncedSeq = replicationSyncStateDao.findLastSyncedSeq(nodeId);
+        log.debug("lastSyncedSeq={}", lastSyncedSeq);
+        URI remoteLogUri = buildReplicationLogUri(nodeId, lastSyncedSeq.orElse(null));
+
+        log.info("Fetching replication log from nodeId={} at URI={}", nodeId, remoteLogUri);
+        List<ReplicationLogEntry> remoteEntries = fetchRemoteLog(remoteLogUri);
+        if (remoteEntries.isEmpty()) {
+            log.info("No new replication entries from nodeId={}", nodeId);
+            return;
         }
 
-        switch (entry.type()) {
-            case CREATE -> {
-                // todo: insert log first. If insert is ignored, then skip applying the mutation.
-                replicationLogDao.insertOrIgnore(entry);
-                notesDao.insertOrIgnore(note);
-            }
-            case UPDATE -> {
+        for (ReplicationLogEntry entry : remoteEntries) {
+            log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
+                    entry.seq(), entry.opId(), entry.ts(), entry.nodeId(), entry.type(), entry.payload());
 
-                replicationLogDao.insertOrIgnore(entry);
-                // todo: handle update conflicts?
-                notesDao.updateAtTs(entry.ts(), note);
-
-            }
-            case DELETE -> {
-                notesDao.deleteAtTsAndReturn(entry.noteId(), entry.ts());
-                replicationLogDao.insertOrIgnore(entry);
-            }
-            default -> throw new IllegalArgumentException("Unknown operation type: " + entry.type());
+            // for each log entry:
+            //  1. update Lamport clock atomically using getAndUpdate.
+            //  2. In one transaction:
+            //     a. apply the mutation to the local note store
+            //     b. insert the replication log entry into local replication log table
+            //     c. update the last synced seq for the remote node
+            //  Question: how does the updated Lamport clock get reflected in the log entry?
+            lamportClockService.setTime(entry.ts());
+            replicationSyncService.applyReplicationLog(entry);
         }
-        replicationSyncStateDao.updateLastSyncedSeq(entry.nodeId(), entry.seq());
+
+        // todo: in the above loop, we should update lastSyncedSeq incrementally instead of at the end.
+        Long latestSeq = remoteEntries.get(remoteEntries.size() - 1).seq();
+        if (latestSeq == null) {
+            throw new IllegalStateException("Remote replication entry missing sequence value");
+        }
+        replicationSyncStateDao.updateLastSyncedSeq(nodeId, latestSeq);
+
+        log.info("Replication sync completed for nodeId={} with {} entries. lastSyncedSeq={}.",
+                nodeId, remoteEntries.size(), latestSeq);
     }
 
+    // todo: consider grpc call instead http
+    private URI buildReplicationLogUri(String nodeId, @Nullable Long seq) {
+        // todo: need a better way to manage peer addresses
+        String baseUrl = "http://polynote-" + nodeId.toLowerCase() + ":8080";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/replication/log");
+        if (seq != null) {
+            builder.queryParam("since", seq);
+        }
+        return builder.build().toUri();
+    }
+
+    private List<ReplicationLogEntry> fetchRemoteLog(URI requestUri) {
+        try {
+            ReplicationLogEntry[] response = restTemplate.getForObject(requestUri, ReplicationLogEntry[].class);
+            if (response == null || response.length == 0) {
+                return List.of();
+            }
+            return Arrays.asList(response);
+        } catch (RestClientException e) {
+            log.error("Failed to fetch replication log from URI={}", requestUri, e);
+            throw new IllegalStateException("Unable to fetch replication log from peer", e);
+        }
+    }
 
 }

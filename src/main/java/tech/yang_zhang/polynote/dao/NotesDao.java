@@ -2,10 +2,8 @@ package tech.yang_zhang.polynote.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -31,49 +29,52 @@ public class NotesDao {
                         "title TEXT NOT NULL," +
                         "body TEXT," +
                         "updated_at INTEGER NOT NULL," +
-                        "updated_by TEXT NOT NULL" +
+                        "updated_by TEXT NOT NULL," +
+                        "tomestoned INTEGER NOT NULL DEFAULT 0" +
                         ")"
         );
     }
 
     public void insert(Note note) {
-        String sql = "INSERT INTO notes (id, title, body, updated_at, updated_by) " +
-                "VALUES (:id, :title, :body, :updatedAt, :updatedBy)";
+        String sql = "INSERT INTO notes (id, title, body, updated_at, updated_by, tomestoned) " +
+                "VALUES (:id, :title, :body, :updatedAt, :updatedBy, :tomestoned)";
 
         Map<String, Object> params = Map.of(
                 "id", note.id(),
                 "title", note.title(),
                 "body", note.body(),
                 "updatedAt", note.updatedAt(),
-                "updatedBy", note.updatedBy()
+                "updatedBy", note.updatedBy(),
+                "tomestoned", note.tomestoned() ? 1 : 0
         );
 
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
     public void insertOrIgnore(Note note) {
-        String sql = "INSERT OR IGNORE INTO notes (id, title, body, updated_at, updated_by) " +
-                "VALUES (:id, :title, :body, :updatedAt, :updatedBy)";
+        String sql = "INSERT OR IGNORE INTO notes (id, title, body, updated_at, updated_by, tomestoned) " +
+                "VALUES (:id, :title, :body, :updatedAt, :updatedBy, :tomestoned)";
 
         Map<String, Object> params = Map.of(
                 "id", note.id(),
                 "title", note.title(),
                 "body", note.body(),
                 "updatedAt", note.updatedAt(),
-                "updatedBy", note.updatedBy()
+                "updatedBy", note.updatedBy(),
+                "tomestoned", note.tomestoned() ? 1 : 0
         );
 
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
-    public List<Note> findAll() {
-        String sql = "SELECT id, title, body, updated_at, updated_by FROM notes";
+    public List<Note> findAllNonTomestoned() {
+        String sql = "SELECT id, title, body, updated_at, updated_by, tomestoned FROM notes WHERE tomestoned = 0";
         return jdbcTemplate.getJdbcTemplate().query(sql, (rs, rowNum) -> mapRow(rs));
     }
 
     public boolean update(Note note) {
         String sql = "UPDATE notes SET title = :title, body = :body, updated_at = :updatedAt, updated_by = :updatedBy " +
-                "WHERE id = :id";
+                "WHERE id = :id AND tomestoned = 0";
         Map<String, Object> params = Map.of(
                 "id", note.id(),
                 "title", note.title(),
@@ -86,7 +87,7 @@ public class NotesDao {
 
     public boolean updateAtTs(long ts, Note note) {
         String sql = "UPDATE notes SET title = :title, body = :body, updated_at = :updatedAt, updated_by = :updatedBy " +
-                "WHERE id = :id AND updated_at = :ts";
+                "WHERE id = :id AND updated_at = :ts AND tomestoned = 0";
         Map<String, Object> params = Map.of(
                 "id", note.id(),
                 "title", note.title(),
@@ -98,21 +99,32 @@ public class NotesDao {
         return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
     }
 
-    public Note deleteAndReturn(String id) {
-        String sql = "DELETE FROM notes WHERE id = :id RETURNING id, title, body, updated_at, updated_by";
-        return deleteWithParams(sql, new MapSqlParameterSource(Map.of("id", id)), id);
-    }
-
-    public Note deleteAtTsAndReturn(String id, long ts) {
-        String sql = "DELETE FROM notes WHERE id = :id AND updated_at = :ts RETURNING id, title, body, updated_at, updated_by";
+    public Note deleteAndReturn(String id, long newUpdatedAt, String updatedBy) {
+        String sql = "UPDATE notes SET tomestoned = 1, updated_at = :newUpdatedAt, updated_by = :updatedBy " +
+                "WHERE id = :id AND tomestoned = 0 " +
+                "RETURNING id, title, body, updated_at, updated_by, tomestoned";
         Map<String, Object> params = Map.of(
                 "id", id,
-                "ts", ts
+                "newUpdatedAt", newUpdatedAt,
+                "updatedBy", updatedBy
         );
-        return deleteWithParams(sql, new MapSqlParameterSource(params), id);
+        return updateWithParams(sql, new MapSqlParameterSource(params), id);
     }
 
-    private Note deleteWithParams(String sql, MapSqlParameterSource params, String id) {
+    public Note deleteAndReturn(String noteId, long oldUpdatedAt, long newUpdatedAt, String updatedBy) {
+        String sql = "UPDATE notes SET tomestoned = 1, updated_at = :newUpdatedAt, updated_by = :updatedBy " +
+                "WHERE id = :id AND updated_at = :oldUpdatedAt AND tomestoned = 0 " +
+                "RETURNING id, title, body, updated_at, updated_by, tomestoned";
+        Map<String, Object> params = Map.of(
+                "id", noteId,
+                "oldUpdatedAt", oldUpdatedAt,
+                "newUpdatedAt", newUpdatedAt,
+                "updatedBy", updatedBy
+        );
+        return updateWithParams(sql, new MapSqlParameterSource(params), noteId);
+    }
+
+    private Note updateWithParams(String sql, MapSqlParameterSource params, String id) {
         return jdbcTemplate.query(sql, params, (ResultSet rs) -> {
             if (!rs.next()) {
                 return null;
@@ -132,7 +144,8 @@ public class NotesDao {
                 rs.getString("title"),
                 rs.getString("body"),
                 rs.getLong("updated_at"),
-                rs.getString("updated_by")
+                rs.getString("updated_by"),
+                rs.getBoolean("tomestoned")
         );
     }
 }

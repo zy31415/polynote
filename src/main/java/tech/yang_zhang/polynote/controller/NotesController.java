@@ -77,7 +77,7 @@ public class NotesController {
                                            @RequestParam(value = "force", defaultValue = "false") boolean force) {
         log.info("DELETE /notes/{}?ts={} & force={} invoked", id, ts, force);
         if (ts != null) {
-            notesService.deleteNoteAtTs(ts, id);
+            notesService.deleteNoteAtTs(id, ts);
             return ResponseEntity.noContent().build();
         }
         if (force) {

@@ -43,7 +43,8 @@ public class NotesService {
                 request.title(),
                 request.body(),
                 time,
-                properties.podName()
+                properties.podName(),
+                false
         );
         notesDao.insert(note);
         replicationLogService.recordCreate(note);
@@ -58,7 +59,8 @@ public class NotesService {
                 request.title(),
                 request.body(),
                 time,
-                properties.podName()
+                properties.podName(),
+                false
         );
 
         boolean updated = notesDao.update(note);
@@ -77,7 +79,8 @@ public class NotesService {
                 request.title(),
                 request.body(),
                 time,
-                properties.podName()
+                properties.podName(),
+                false
         );
 
         boolean updated = notesDao.updateAtTs(ts, note);
@@ -89,19 +92,19 @@ public class NotesService {
     }
 
     @Transactional
-    public void deleteNoteAtTs(long ts, String id) {
-        long time = lamportClockService.getTime();
-        Note note = notesDao.deleteAtTsAndReturn(id, ts);
+    public void deleteNoteAtTs(String id, long ts) {
+        long currentTime = lamportClockService.getTime();
+        Note note = notesDao.deleteAndReturn(id, ts, currentTime, properties.podName());
         if (note == null) {
             throw new NoteNotFoundException(id);
         }
-        replicationLogService.recordDelete(note, time);
+        replicationLogService.recordDelete(note, currentTime);
     }
 
     @Transactional
     public void deleteNote(String id) {
         long time = lamportClockService.getTime();
-        Note note = notesDao.deleteAndReturn(id);
+        Note note = notesDao.deleteAndReturn(id, time, properties.podName());
         if (note == null) {
             throw new NoteNotFoundException(id);
         }
@@ -110,6 +113,6 @@ public class NotesService {
 
     @Transactional(readOnly = true)
     public java.util.List<Note> listNotes() {
-        return notesDao.findAll();
+        return notesDao.findAllNonTomestoned();
     }
 }
