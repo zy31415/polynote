@@ -127,6 +127,8 @@ public class ReplicationLogService {
             return;
         }
 
+        Long latestSeq = null;
+
         for (ReplicationLogEntry entry : remoteEntries) {
             log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
                     entry.seq(), entry.opId(), entry.ts(), entry.nodeId(), entry.type(), entry.payload());
@@ -141,18 +143,11 @@ public class ReplicationLogService {
 
             // Note: the ts here is not recorded in the system but only logged. This ts represents the event of receiving a remote log.
             //  Technically, it's OK to not tick the clock here.
-            Long ts = lamportClockService.syncAndTick(entry.ts());
+            long ts = lamportClockService.syncAndTick(entry.ts());
             log.info("Remote log opId={} is received at time={}", entry.opId(), ts);
 
-            replicationSyncService.processReplicationLog(entry);
+            latestSeq = replicationSyncService.processReplicationLog(entry);
         }
-
-        // todo: in the above loop, we should update lastSyncedSeq incrementally instead of at the end.
-        Long latestSeq = remoteEntries.get(remoteEntries.size() - 1).seq();
-        if (latestSeq == null) {
-            throw new IllegalStateException("Remote replication entry missing sequence value");
-        }
-        replicationSyncStateDao.updateLastSyncedSeq(nodeId, latestSeq);
 
         log.info("Replication sync completed for nodeId={} with {} entries. lastSyncedSeq={}.",
                 nodeId, remoteEntries.size(), latestSeq);

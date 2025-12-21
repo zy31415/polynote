@@ -36,7 +36,7 @@ public class ReplicationSyncService {
     // todo: think about if this is truly service code or domain logic code?
     //  For now, the class exists for the only purpose of transaction management.
     @Transactional
-    public void processReplicationLog(ReplicationLogEntry entry) {
+    public long processReplicationLog(ReplicationLogEntry entry) {
         Note note;
         try {
             note = objectMapper.readValue(entry.payload(), Note.class);
@@ -66,6 +66,7 @@ public class ReplicationSyncService {
             default -> throw new IllegalArgumentException("Unknown operation type: " + entry.type());
         }
         replicationSyncStateDao.updateLastSyncedSeq(entry.nodeId(), entry.seq());
+        return entry.seq();
     }
 
     private void appendLog(ReplicationLogEntry entry) {
