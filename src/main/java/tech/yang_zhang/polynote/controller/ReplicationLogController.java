@@ -35,6 +35,7 @@ public class ReplicationLogController {
         }
     }
 
+    // todo: what happens if this is called multiple times concurrently?
     @PutMapping("/sync/{nodeId}")
     public ResponseEntity<Void> triggerReplicationSync(@PathVariable String nodeId) {
         log.info("PUT /replication/sync/{} invoked. Sync with node {}", nodeId, nodeId);

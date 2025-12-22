@@ -252,3 +252,7 @@ PolyNote is designed to be the best practical project for learning:
 	•	Offline/online transitions
 	•	Network partitions
 	•	Log-based replication
+
+# Todos
+
+- [ ] Rename some lamport time columns so that they are consistent and clear that they are lamport timestamps (e.g. updated_at -> updated_lamport, ts -> op_lamport)

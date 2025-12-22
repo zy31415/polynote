@@ -85,7 +85,7 @@ public class ReplicationLogService {
 
         for (ReplicationLogEntry entry : remoteEntries) {
             log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
-                    entry.seq(), entry.opId(), entry.ts(), entry.nodeId(), entry.type(), entry.payload());
+                    entry.seq(), entry.opId(), entry.ts(), entry.noteId(), entry.type(), entry.payload());
 
             // Note: the ts here is not recorded in the system but only logged. This ts represents the event of receiving a remote log.
             //  Technically, it's OK to not tick the clock here.
@@ -93,7 +93,7 @@ public class ReplicationLogService {
             log.info("Remote log opId={} is received at time={}", entry.opId(), ts);
 
             // Process each entry in its own transaction
-            latestSeq = replicationSyncService.processReplicationLog(entry);
+            latestSeq = replicationSyncService.processReplicationLog(nodeId, entry);
         }
 
         log.info("Replication sync completed for nodeId={} with {} entries. lastSyncedSeq={}.",

@@ -36,14 +36,14 @@ public class ReplicationSyncService {
     // todo: think about if this is truly service code or domain logic code?
     //  For now, the class exists for the only purpose of transaction management.
     @Transactional
-    public long processReplicationLog(ReplicationLogEntry entry) {
+    public long processReplicationLog(String nodeId, ReplicationLogEntry entry) {
         if (appendLog(entry)) {
             log.debug("Appended new replication log entry: {}", entry);
             applyMutation(entry);
         } else {
             log.debug("Replication log entry already exists: {}", entry);
         }
-        replicationSyncStateDao.updateLastSyncedSeq(entry.nodeId(), entry.seq());
+        replicationSyncStateDao.updateLastSyncedSeq(nodeId, entry.seq());
         return entry.seq();
     }
 
