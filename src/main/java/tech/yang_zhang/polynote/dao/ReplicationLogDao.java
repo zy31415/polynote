@@ -37,22 +37,7 @@ public class ReplicationLogDao {
         );
     }
 
-    public void insert(ReplicationLogEntry entry) {
-        String sql = "INSERT INTO replication_log (op_id, ts, node_id, type, note_id, payload) " +
-                "VALUES (:opId, :ts, :nodeId, :type, :noteId, :payload)";
-
-        Map<String, Object> params = Map.of(
-                "opId", entry.opId(),
-                "ts", entry.ts(),
-                "nodeId", entry.nodeId(),
-                "type", entry.type().name(),
-                "noteId", entry.noteId(),
-                "payload", entry.payload()
-        );
-        jdbcTemplate.update(sql, new MapSqlParameterSource(params));
-    }
-
-    public void insertOrIgnore(ReplicationLogEntry entry) {
+    public boolean insertOrIgnore(ReplicationLogEntry entry) {
         String sql = "INSERT OR IGNORE INTO replication_log (op_id, ts, node_id, type, note_id, payload) " +
                 "VALUES (:opId, :ts, :nodeId, :type, :noteId, :payload)";
 
@@ -64,7 +49,8 @@ public class ReplicationLogDao {
                 "noteId", entry.noteId(),
                 "payload", entry.payload()
         );
-        jdbcTemplate.update(sql, new MapSqlParameterSource(params));
+        int rows = jdbcTemplate.update(sql, new MapSqlParameterSource(params));
+        return rows > 0;
     }
 
     public List<ReplicationLogEntry> findSince(@Nullable Long sinceSeqExclusive) {

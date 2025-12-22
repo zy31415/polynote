@@ -51,7 +51,7 @@ public class NotesDao {
         jdbcTemplate.update(sql, new MapSqlParameterSource(params));
     }
 
-    public void insertOrIgnore(Note note) {
+    public boolean insertOrIgnore(Note note) {
         String sql = "INSERT OR IGNORE INTO notes (id, title, body, updated_at, updated_by, tomestoned) " +
                 "VALUES (:id, :title, :body, :updatedAt, :updatedBy, :tomestoned)";
 
@@ -64,7 +64,8 @@ public class NotesDao {
                 "tomestoned", note.tomestoned() ? 1 : 0
         );
 
-        jdbcTemplate.update(sql, new MapSqlParameterSource(params));
+        int rows = jdbcTemplate.update(sql, new MapSqlParameterSource(params));
+        return rows > 0;
     }
 
     public List<Note> findAllNonTomestoned() {
@@ -147,5 +148,21 @@ public class NotesDao {
                 rs.getString("updated_by"),
                 rs.getBoolean("tomestoned")
         );
+    }
+
+    public Note findById(String id) {
+        String sql = "SELECT id, title, body, updated_at, updated_by, tomestoned FROM notes WHERE id = :id";
+        Map<String, Object> params = Map.of("id", id);
+        return jdbcTemplate.query(sql, new MapSqlParameterSource(params), (ResultSet rs) -> {
+            if (!rs.next()) {
+                return null;
+            }
+            Note result = mapRow(rs);
+            if (rs.next()) {
+                // This should never happen since id is primary key. If it does, a 500 return code will be shown.
+                throw new IllegalStateException("Multiple rows returned when finding note with id=" + id);
+            }
+            return result;
+        });
     }
 }

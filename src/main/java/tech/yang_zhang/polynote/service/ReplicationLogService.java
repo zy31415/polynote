@@ -67,52 +67,6 @@ public class ReplicationLogService {
     }
 
     public void replicationSync(String nodeId) {
-        log.info("Replication sync triggered for nodeId={}", nodeId);
-        sync(nodeId);
-    }
-
-    public void recordDelete(Note note, long time) {
-        writeEntry(OperationType.DELETE, note.id(), serialize(note), time);
-    }
-
-    private void writeEntry(OperationType type, Note note) {
-        writeEntry(type, note.id(), serialize(note), note.updatedAt());
-    }
-
-    private void writeEntry(OperationType type, String noteId, String payload, Long time) {
-        ReplicationLogEntry entry = new ReplicationLogEntry(
-                null,
-                UUID.randomUUID().toString(),
-                time,
-                properties.podName(),
-                type,
-                noteId,
-                payload
-        );
-        replicationLogDao.insert(entry);
-
-        // Register afterCommit synchronization to log after transaction commits
-        // This ensures that the log is only recorded if the surrounding transaction is successful
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        log.info("Replication log entry recorded: type={} noteId={} opId={} time={}", type, noteId, entry.opId(), time);
-                    }
-                }
-        );
-    }
-
-    private String serialize(Note note) {
-        try {
-            return objectMapper.writeValueAsString(note);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize note for replication log", e);
-        }
-    }
-
-    // todo: rethink about this function. Should it be service code or domain logic code?
-    public void sync(String nodeId) {
         // todo: should the whole sync operation in a transaction? Probably not - why?
         log.info("Starting replication sync with nodeId={}", nodeId);
 
@@ -133,24 +87,62 @@ public class ReplicationLogService {
             log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
                     entry.seq(), entry.opId(), entry.ts(), entry.nodeId(), entry.type(), entry.payload());
 
-            // for each log entry:
-            //  1. update Lamport clock atomically using getAndUpdate.
-            //  2. In one transaction:
-            //     a. apply the mutation to the local note store
-            //     b. insert the replication log entry into local replication log table
-            //     c. update the last synced seq for the remote node
-            //  Question: how does the updated Lamport clock get reflected in the log entry?
-
             // Note: the ts here is not recorded in the system but only logged. This ts represents the event of receiving a remote log.
             //  Technically, it's OK to not tick the clock here.
             long ts = lamportClockService.syncAndTick(entry.ts());
             log.info("Remote log opId={} is received at time={}", entry.opId(), ts);
 
+            // Process each entry in its own transaction
             latestSeq = replicationSyncService.processReplicationLog(entry);
         }
 
         log.info("Replication sync completed for nodeId={} with {} entries. lastSyncedSeq={}.",
                 nodeId, remoteEntries.size(), latestSeq);
+    }
+
+    public void recordDelete(Note note, long time) {
+        writeEntry(OperationType.DELETE, note.id(), serialize(note), time);
+    }
+
+    private void writeEntry(OperationType type, Note note) {
+        writeEntry(type, note.id(), serialize(note), note.updatedAt());
+    }
+
+    private void writeEntry(OperationType type, String noteId, String payload, Long time) {
+        ReplicationLogEntry entry = new ReplicationLogEntry(
+                null,
+                UUID.randomUUID().toString(),
+                time,
+                properties.podName(),
+                type,
+                noteId,
+                payload
+        );
+
+        if (!replicationLogDao.insertOrIgnore(entry)) {
+            // this should never happen as opId is generated as UUID
+            log.error("Replication log entry already exists: opId={}", entry.opId());
+            throw new IllegalStateException("Replication log entry already exists: opId=" + entry.opId());
+        }
+
+        // Register afterCommit synchronization to log after transaction commits
+        // This ensures that the log is only recorded if the surrounding transaction is successful
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        log.info("Replication log entry recorded: type={} noteId={} opId={} time={}", type, noteId, entry.opId(), time);
+                    }
+                }
+        );
+    }
+
+    private String serialize(Note note) {
+        try {
+            return objectMapper.writeValueAsString(note);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize note for replication log", e);
+        }
     }
 
     // todo: consider grpc call instead http
