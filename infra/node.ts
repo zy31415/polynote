@@ -4,7 +4,7 @@ import * as pulumi from "@pulumi/pulumi";
 export function createPolynoteNode(suffix: string, imageName: pulumi.Input<string>) {
     const name = `polynote-${suffix}`;
     const labels = { app: "polynote", "node-id": suffix };
-    const podName = suffix.toUpperCase();
+    const podName = suffix.toUpperCase() // pod name uses uppercase suffix
     const volumePath = `/var/${name}`;
     const volumeName = `${name}-data`;
     const dbPath = `${volumePath}/notes.db`;
