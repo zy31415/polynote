@@ -63,7 +63,7 @@ public class NotesService {
                 false
         );
 
-        boolean updated = notesDao.update(note);
+        boolean updated = notesDao.updateNonTomestoned(note);
         if (!updated) {
             throw new NoteNotFoundException(id);
         }

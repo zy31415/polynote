@@ -73,7 +73,7 @@ public class NotesDao {
         return jdbcTemplate.getJdbcTemplate().query(sql, (rs, rowNum) -> mapRow(rs));
     }
 
-    public boolean update(Note note) {
+    public boolean updateNonTomestoned(Note note) {
         String sql = "UPDATE notes SET title = :title, body = :body, updated_at = :updatedAt, updated_by = :updatedBy " +
                 "WHERE id = :id AND tomestoned = 0";
         Map<String, Object> params = Map.of(
@@ -82,6 +82,20 @@ public class NotesDao {
                 "body", note.body(),
                 "updatedAt", note.updatedAt(),
                 "updatedBy", note.updatedBy()
+        );
+        return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
+    }
+
+    public boolean update(Note note) {
+        String sql = "UPDATE notes SET title = :title, body = :body, updated_at = :updatedAt, updated_by = :updatedBy, tomestoned = :tomestoned " +
+                "WHERE id = :id";
+        Map<String, Object> params = Map.of(
+                "id", note.id(),
+                "title", note.title(),
+                "body", note.body(),
+                "updatedAt", note.updatedAt(),
+                "updatedBy", note.updatedBy(),
+                "tomestoned", note.tomestoned() ? 1 : 0
         );
         return jdbcTemplate.update(sql, new MapSqlParameterSource(params)) > 0;
     }
