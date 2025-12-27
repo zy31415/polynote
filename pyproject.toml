@@ -25,3 +25,9 @@ test = [
     "requests (>=2.32.5,<3.0.0)",
     "tenacity (>=9.1.2,<10.0.0)"
 ]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+log_cli_date_format = "%H:%M:%S"

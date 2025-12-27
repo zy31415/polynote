@@ -42,3 +42,6 @@ data/
 logs/
 
 .envrc
+.venv
+*.pyc
+__pycache__/
