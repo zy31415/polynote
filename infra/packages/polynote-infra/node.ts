@@ -1,9 +1,22 @@
 import * as k8s from "@pulumi/kubernetes";
 import * as pulumi from "@pulumi/pulumi";
+import { createPolynoteDockerImage } from "./docker";
+
+const DEFAULT_IMAGE_NAME = "polynote";
+const DEFAULT_BUILD_CONTEXT = "../../";
+
+let polynoteImage: ReturnType<typeof createPolynoteDockerImage> | undefined;
+
+function getPolynoteImageName(): pulumi.Input<string> {
+    if (!polynoteImage) {
+        polynoteImage = createPolynoteDockerImage(DEFAULT_IMAGE_NAME, DEFAULT_BUILD_CONTEXT);
+    }
+
+    return polynoteImage.imageName;
+}
 
 export function createPolynoteNode(
     suffix: string,
-    imageName: pulumi.Input<string>,
     namespace?: pulumi.Input<string>
 ) {
     const name = `polynote-${suffix}`;
@@ -15,7 +28,7 @@ export function createPolynoteNode(
 
     const container = {
         name: "polynote",
-        image: imageName,
+        image: getPolynoteImageName(),
         imagePullPolicy: "IfNotPresent",
         env: [
             { name: "POD_NAME", value: podName },

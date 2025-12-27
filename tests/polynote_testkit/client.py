@@ -11,9 +11,11 @@ class PolyNoteClient:
     This is a *test client*, not production code.
     """
 
-    def __init__(self, base_url: str, node_id: Optional[str] = None):
-        self.base_url = base_url.rstrip("/")
+    base_url = "https://127.0.0.1:8081/"
+
+    def __init__(self, node_id: str, stack_name: str):
         self.node_id = node_id
+        self.stack_name = stack_name
         self._session = requests.Session()
         self._timeout = 5
 
@@ -92,23 +94,26 @@ class PolyNoteClient:
         return f"{self.base_url}{path}"
 
     def _get(self, path: str) -> Any:
-        r = self._session.get(self._url(path), timeout=self._timeout)
+        r = self._session.get(self._url(path), timeout=self._timeout, headers=self._headers(path))
         self._raise_for_status(r)
         return self._json_or_none(r)
 
     def _post(self, path: str, json: Optional[Dict[str, Any]] = None) -> Any:
-        r = self._session.post(self._url(path), json=json, timeout=self._timeout)
+        r = self._session.post(self._url(path), json=json, timeout=self._timeout, headers=self._headers(path))
         self._raise_for_status(r)
         return self._json_or_none(r)
 
     def _put(self, path: str, json: Dict[str, Any]) -> Any:
-        r = self._session.put(self._url(path), json=json, timeout=self._timeout)
+        r = self._session.put(self._url(path), json=json, timeout=self._timeout, headers=self._headers(path))
         self._raise_for_status(r)
         return self._json_or_none(r)
 
     def _delete(self, path: str) -> None:
-        r = self._session.delete(self._url(path), timeout=self._timeout)
+        r = self._session.delete(self._url(path), timeout=self._timeout, headers=self._headers(path))
         self._raise_for_status(r)
+
+    def _headers(self, path: str) -> Dict[str, str]:
+        return {"Host": f"{self.node_id}.{self.stack_name}.polynote.local"}
 
     @staticmethod
     def _json_or_none(response: requests.Response) -> Any:

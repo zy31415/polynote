@@ -1,16 +1,17 @@
 import os
-import time
+
+import pulumi.automation as auto
 import pytest
 import requests
 from tenacity import retry, stop_after_delay, wait_fixed
 
-import pulumi.automation as auto
+from polynote_testkit.client import PolyNoteClient
 
-INFRA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "infra"))
+INFRA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "infra/polynote-ft"))
 
 def pulumi_stack_name() -> str:
     # Make it unique per run if you plan parallel CI runs
-    return os.environ.get("PULUMI_STACK", "polynote-test")
+    return os.environ.get("PULUMI_STACK", "polynote-ft")
 
 @retry(stop=stop_after_delay(120), wait=wait_fixed(2), reraise=True)
 def wait_http_ready(url: str):
@@ -57,21 +58,20 @@ def polynote_env():
             "node_b": node_b,
             "node_c": node_c,
             "outputs": outputs,
+            "stack_name": stack_name,
         }
     finally:
         # Always tear down
         stack.destroy(on_output=print)
 
-from polynote_testkit.client import PolyNoteClient
-
 @pytest.fixture(scope="session")
 def node_a(polynote_env):
-    return PolyNoteClient(polynote_env["node_a"])
+    return PolyNoteClient(node_id='a', stack_name=polynote_env["stack_name"])
 
 @pytest.fixture(scope="session")
 def node_b(polynote_env):
-    return PolyNoteClient(polynote_env["node_b"])
+    return PolyNoteClient(node_id='b', stack_name=polynote_env["stack_name"])
 
 @pytest.fixture(scope="session")
 def node_c(polynote_env):
-    return PolyNoteClient(polynote_env["node_c"])
+    return PolyNoteClient(node_id='c', stack_name=polynote_env["stack_name"])

@@ -1,0 +1,10 @@
+name: polynote-infra
+description: PolyNote infrastructure for local kind cluster
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: kubernetes-typescript

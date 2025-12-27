@@ -3,12 +3,13 @@ import * as k8s from "@pulumi/kubernetes";
 import {createPolynoteIngress} from "../packages/polynote-infra/ingress";
 
 const suffixes = ["a", "b", "c"] as const;
-const namespaceName = "polynote-dev";
+
+// todo: namespace should b input from test runner
+const namespaceName = "polynote-ft";
 
 new k8s.core.v1.Namespace(namespaceName, {
     metadata: { name: namespaceName },
 });
-
 
 const polynoteNodes = Object.fromEntries(
     suffixes.map((suffix) => [suffix, createPolynoteNode(suffix, namespaceName)])
