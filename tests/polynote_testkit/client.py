@@ -3,6 +3,7 @@ from __future__ import annotations
 import requests
 from typing import Any, Dict, List, Optional
 
+from .conf import FTConfig
 
 class PolyNoteClient:
     """
@@ -10,8 +11,6 @@ class PolyNoteClient:
 
     This is a *test client*, not production code.
     """
-
-    base_url = "https://127.0.0.1:8081/"
 
     def __init__(self, node_id: str, stack_name: str):
         self.node_id = node_id
@@ -61,7 +60,7 @@ class PolyNoteClient:
         """
         Trigger a replication pull from another node.
         """
-        return self._post(f"/replication/sync/{remote_node_id}")
+        return self._put(f"/replication/sync/{remote_node_id}")
 
     # -----------------------
     # Network simulation
@@ -91,7 +90,7 @@ class PolyNoteClient:
     # -----------------------
 
     def _url(self, path: str) -> str:
-        return f"{self.base_url}{path}"
+        return f"{FTConfig.BASE_URL}{path}"
 
     def _get(self, path: str) -> Any:
         r = self._session.get(self._url(path), timeout=self._timeout, headers=self._headers(path))
@@ -103,7 +102,7 @@ class PolyNoteClient:
         self._raise_for_status(r)
         return self._json_or_none(r)
 
-    def _put(self, path: str, json: Dict[str, Any]) -> Any:
+    def _put(self, path: str, json: Optional[Dict[str, Any]] = None) -> Any:
         r = self._session.put(self._url(path), json=json, timeout=self._timeout, headers=self._headers(path))
         self._raise_for_status(r)
         return self._json_or_none(r)

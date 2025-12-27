@@ -4,10 +4,6 @@ Functional test:
 - Trigger replication
 - Verify eventual convergence on Node B and Node C
 """
-
-# from polynote_testkit.eventually import eventually
-
-
 def test_create_note_replicates_to_all_nodes(node_a, node_b, node_c):
     # 1. Create note on Node A
     created = node_a.create_note(
