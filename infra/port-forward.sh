@@ -4,9 +4,9 @@
 # PolyNote Port Forward Manager
 #
 # Usage:
-#   ./port-forward.sh start     Start port-forwarding for A/B/C
-#   ./port-forward.sh clean     Kill all running port-forwards
-#   ./port-forward.sh help      Show detailed help
+#   ./port-forward.sh start [-n polynote-dev|polynote-test]   Start port-forwarding for A/B/C
+#   ./port-forward.sh clean                                   Kill all running port-forwards
+#   ./port-forward.sh help                                    Show detailed help
 #
 # Ports:
 #   A → localhost:8081 → polynote-a:8080
@@ -37,9 +37,9 @@ show_help() {
 PolyNote Port Forward Manager
 
 Usage:
-  $0 start       Start port-forwarding the 3 PolyNote deployments
-  $0 clean       Kill all running kubectl port-forward processes
-  $0 help        Show this help message
+  $0 start [-n polynote-dev|polynote-test]  Start port-forwarding the 3 PolyNote deployments
+  $0 clean                                 Kill all running kubectl port-forward processes
+  $0 help                                  Show this help message
 
 Description:
   This script forwards local ports to the three PolyNote nodes:
@@ -61,8 +61,11 @@ Description:
   And terminates them gracefully.
 
 Examples:
-  Start all port-forwards:
+  Start all port-forwards in polynote-dev (default):
       $0 start
+
+  Start all port-forwards in polynote-test:
+      $0 start -n polynote-test
 
   Stop all port-forwards:
       $0 clean
@@ -73,15 +76,16 @@ EOF
 }
 
 start_port_forward() {
-    echo "Starting PolyNote port forwarding..."
+    local namespace=$1
+    echo "Starting PolyNote port forwarding in namespace: $namespace"
 
-    nohup kubectl port-forward deployment/$DEPLOY_A $PORT_A_LOCAL:$PORT_REMOTE > logs/port-a.log 2>&1 &
+    nohup kubectl port-forward -n "$namespace" deployment/$DEPLOY_A $PORT_A_LOCAL:$PORT_REMOTE > logs/port-a.log 2>&1 &
     echo "Forward A: localhost:$PORT_A_LOCAL → $DEPLOY_A:$PORT_REMOTE"
 
-    nohup kubectl port-forward deployment/$DEPLOY_B $PORT_B_LOCAL:$PORT_REMOTE > logs/port-b.log 2>&1 &
+    nohup kubectl port-forward -n "$namespace" deployment/$DEPLOY_B $PORT_B_LOCAL:$PORT_REMOTE > logs/port-b.log 2>&1 &
     echo "Forward B: localhost:$PORT_B_LOCAL → $DEPLOY_B:$PORT_REMOTE"
 
-    nohup kubectl port-forward deployment/$DEPLOY_C $PORT_C_LOCAL:$PORT_REMOTE > logs/port-c.log 2>&1 &
+    nohup kubectl port-forward -n "$namespace" deployment/$DEPLOY_C $PORT_C_LOCAL:$PORT_REMOTE > logs/port-c.log 2>&1 &
     echo "Forward C: localhost:$PORT_C_LOCAL → $DEPLOY_C:$PORT_REMOTE"
 
     echo "All forwards started. Logs available in logs/port-*.log"
@@ -106,9 +110,32 @@ clean_port_forward() {
     echo "Cleanup complete."
 }
 
+namespace="polynote-dev"
+
+while getopts ":n:" opt; do
+    case "$opt" in
+        n)
+            namespace="$OPTARG"
+            ;;
+        *)
+            echo "Invalid option: -$OPTARG"
+            echo "Run '$0 help' for usage."
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+if [ "$namespace" != "polynote-dev" ] && [ "$namespace" != "polynote-test" ]; then
+    echo "Invalid namespace: $namespace"
+    echo "Supported namespaces: polynote-dev, polynote-test"
+    exit 1
+fi
+
 case "$1" in
     start)
-        start_port_forward
+        start_port_forward "$namespace"
         ;;
     clean)
         clean_port_forward
