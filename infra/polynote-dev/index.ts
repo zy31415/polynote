@@ -1,17 +1,14 @@
 import {createPolynoteNode} from "./node";
 import {imageName} from "./docker";
 import * as k8s from "@pulumi/kubernetes";
-import * as pulumi from "@pulumi/pulumi";
+import "./ingress";
 
 const suffixes = ["a", "b", "c"] as const;
-const stack = pulumi.getStack();
-const namespaceName = stack === "dev" || stack === "test" ? `polynote-${stack}` : undefined;
+const namespaceName = "polynote-dev";
 
-if (namespaceName) {
-    new k8s.core.v1.Namespace(namespaceName, {
-        metadata: { name: namespaceName },
-    });
-}
+new k8s.core.v1.Namespace(namespaceName, {
+    metadata: { name: namespaceName },
+});
 
 const polynoteNodes = Object.fromEntries(
     suffixes.map((suffix) => [suffix, createPolynoteNode(suffix, imageName, namespaceName)])

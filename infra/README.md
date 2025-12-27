@@ -48,11 +48,6 @@ pulumi preview
 # Apply changes
 pulumi up
 ```
-4) After deployment, still need to do port forwarding to access the services. Run the following command in the ../scripts/ directory:
-
-```
-./port-forward.sh clean && ./port-forward.sh start
-```
 
 5) Check jvm logs in each pod:
 

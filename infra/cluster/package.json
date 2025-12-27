@@ -1,0 +1,11 @@
+{
+  "name": "polynote-cluster",
+  "private": true,
+  "dependencies": {
+    "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/kubernetes": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

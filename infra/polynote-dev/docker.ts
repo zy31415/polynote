@@ -14,7 +14,7 @@ const resolvedSha = (() => {
 
 const image = new docker.Image("polynote-image", {
     imageName: pulumi.interpolate`polynote:${resolvedSha}`,
-    build: { context: ".." },
+    build: { context: "../../" },
     skipPush: true,
 });
 

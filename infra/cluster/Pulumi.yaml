@@ -1,0 +1,3 @@
+name: polynote-cluster
+runtime: nodejs
+description: PolyNote cluster add-ons (ingress-nginx, etc.)
