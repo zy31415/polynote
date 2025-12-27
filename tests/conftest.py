@@ -23,7 +23,7 @@ def wait_http_ready(node_id: str, stack_name: str):
     r.raise_for_status()
 
 @pytest.fixture(scope="session")
-def polynote_env():
+def polynote_env(request):
     """
     Brings up Kind + PolyNote via Pulumi, yields endpoints, then destroys infra.
     """
@@ -31,41 +31,52 @@ def polynote_env():
     stack_name = pulumi_stack_name()
     logger.info(f"For this test run, Pulumi stack_name={stack_name}. Starting create/select stack ...")
 
-    # LocalWorkspace runs Pulumi program from an existing directory (infra/)
-    stack = auto.create_or_select_stack(
-        stack_name=stack_name,
-        work_dir=INFRA_DIR,
-        project_name=project_name,
-    )
-
-    # Optional: set config needed by infra
-    # stack.set_config("polynote:replicas", auto.ConfigValue("3"))
-
-    stack.refresh(on_output=None, on_error=print)
-    up_res = stack.up(on_output=None, on_error=print)
-
-    outputs = {k: v.value for k, v in up_res.outputs.items()}
-
-    # Expect node_id in deploymentNames and serviceNames
-    for node_id in ['a', 'b', 'c']:
-        assert node_id in outputs["deploymentNames"] and node_id in outputs["serviceNames"]
-
-    logger.info(f"Pulumi stack_name={stack_name} is up.")
-
-    # Wait until services are reachable
-    for node_id in ['a', 'b', 'c']:
-        wait_http_ready(node_id, stack_name)
-        logger.info(f"Node {node_id} is reachable.")
-
-    logger.info(f"Deployment is ready for testing.")
     try:
+        # LocalWorkspace runs Pulumi program from an existing directory (infra/)
+        stack = auto.create_or_select_stack(
+            stack_name=stack_name,
+            work_dir=INFRA_DIR,
+            project_name=project_name,
+        )
+
+        # Optional: set config needed by infra
+        # stack.set_config("polynote:replicas", auto.ConfigValue("3"))
+
+        stack.refresh(on_output=None, on_error=print)
+        up_res = stack.up(on_output=None, on_error=print)
+
+        outputs = {k: v.value for k, v in up_res.outputs.items()}
+
+        # Expect node_id in deploymentNames and serviceNames
+        for node_id in ['a', 'b', 'c']:
+            assert node_id in outputs["deploymentNames"] and node_id in outputs["serviceNames"]
+
+        logger.info(f"Pulumi stack_name={stack_name} is up.")
+
+        # Wait until services are reachable
+        for node_id in ['a', 'b', 'c']:
+            wait_http_ready(node_id, stack_name)
+            logger.info(f"Node {node_id} is reachable.")
+
+        logger.info(f"Deployment is ready for testing.")
+
         yield {
             "outputs": outputs,
             "stack_name": stack_name,
         }
     finally:
-        # Always tear down
-        logger.info(f"Tearing down Pulumi stack name={stack_name} for functional testing ...")
+        if stack is None:
+            return
+
+        # pytest sets this after tests run; teardown runs after yield
+        if request.session.testsfailed:
+            logger.warning(
+                f"Tests failed ({request.session.testsfailed}). "
+                f"Keeping Pulumi stack {stack_name} for debugging."
+            )
+            return
+
+        logger.info(f"Tearing down Pulumi stack name={stack_name} ...")
         stack.destroy(on_output=print)
         logger.info("Teardown complete.")
 
