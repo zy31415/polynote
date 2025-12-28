@@ -12,7 +12,10 @@ new k8s.core.v1.Namespace(namespaceName, {
 });
 
 const polynoteNodes = Object.fromEntries(
-    suffixes.map((suffix) => [suffix, createPolynoteNode(suffix, namespaceName)])
+    suffixes.map((suffix) => [
+        suffix,
+        createPolynoteNode(suffix, { namespace: namespaceName, volumeType: "emptyDir" }),
+    ])
 ) as Record<(typeof suffixes)[number], ReturnType<typeof createPolynoteNode>>;
 
 export const deploymentNames = Object.fromEntries(

@@ -15,10 +15,38 @@ function getPolynoteImageName(): pulumi.Input<string> {
     return polynoteImage.imageName;
 }
 
+type PolynoteNodeVolumeType = "hostPath" | "emptyDir";
+
+type PolynoteNodeOptions = {
+    namespace?: pulumi.Input<string>;
+    volumeType?: PolynoteNodeVolumeType;
+};
+
+// todo: refactor these code - this function can be broken down.
+export function createPolynoteNode(suffix: string, namespace?: pulumi.Input<string>): {
+    deployment: k8s.apps.v1.Deployment;
+    service: k8s.core.v1.Service;
+};
 export function createPolynoteNode(
     suffix: string,
-    namespace?: pulumi.Input<string>
+    options?: PolynoteNodeOptions
+): {
+    deployment: k8s.apps.v1.Deployment;
+    service: k8s.core.v1.Service;
+};
+export function createPolynoteNode(
+    suffix: string,
+    namespaceOrOptions?: pulumi.Input<string> | PolynoteNodeOptions,
+    options?: PolynoteNodeOptions
 ) {
+    const looksLikeOptions =
+        namespaceOrOptions !== undefined &&
+        typeof namespaceOrOptions === "object" &&
+        ("volumeType" in namespaceOrOptions || "namespace" in namespaceOrOptions);
+    const resolvedOptions: PolynoteNodeOptions = looksLikeOptions
+        ? namespaceOrOptions
+        : { ...options, namespace: namespaceOrOptions as pulumi.Input<string> | undefined };
+    const { namespace, volumeType = "hostPath" } = resolvedOptions;
     const name = `polynote-${suffix}`;
     const labels = { app: "polynote", "node-id": suffix };
     const podName = suffix.toUpperCase() // pod name uses uppercase suffix
@@ -38,13 +66,18 @@ export function createPolynoteNode(
     };
 
     const volumes = [
-        {
-            name: volumeName,
-            hostPath: {
-                path: volumePath,
-                type: "DirectoryOrCreate",
+        volumeType === "hostPath"
+            ? {
+                name: volumeName,
+                hostPath: {
+                    path: volumePath,
+                    type: "DirectoryOrCreate",
+                },
+            }
+            : {
+                name: volumeName,
+                emptyDir: {},
             },
-        },
     ];
 
     const deployment = new k8s.apps.v1.Deployment(name, {

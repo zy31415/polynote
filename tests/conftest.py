@@ -22,14 +22,30 @@ def wait_http_ready(node_id: str, stack_name: str):
     r = requests.get(FTConfig.HEALTH_CHECK_URL, headers=headers, timeout=3)
     r.raise_for_status()
 
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--cluster-teardown",
+        action="store",
+        default="on-success",
+        choices=["never", "on-success", "always"],
+        help="Cluster teardown behavior"
+    )
+
+
 @pytest.fixture(scope="session")
-def polynote_env(request):
+def cluster_teardown_mode(request):
+    return request.config.getoption("--cluster-teardown")
+
+
+@pytest.fixture(scope="session")
+def polynote_env(request, cluster_teardown_mode):
     """
     Brings up Kind + PolyNote via Pulumi, yields endpoints, then destroys infra.
     """
     project_name = "polynote-infra"  # must match Pulumi.yaml name in infra/
     stack_name = pulumi_stack_name()
-    logger.info(f"For this test run, Pulumi stack_name={stack_name}. Starting create/select stack ...")
+    logger.info(f"For this test run, Pulumi stack_name={stack_name}. Cluster teardown mode={cluster_teardown_mode}. Starting create/select stack ...")
 
     try:
         # LocalWorkspace runs Pulumi program from an existing directory (infra/)
@@ -68,8 +84,14 @@ def polynote_env(request):
         if stack is None:
             return
 
-        # pytest sets this after tests run; teardown runs after yield
-        if request.session.testsfailed:
+        if cluster_teardown_mode == "never":
+            logger.warning(
+                f"Cluster teardown mode is 'never'. Keeping Pulumi stack {stack_name} after tests."
+            )
+            return
+
+        if cluster_teardown_mode == "on-success" and request.session.testsfailed > 0:
+            # pytest sets this after tests run; teardown runs after yield
             logger.warning(
                 f"Tests failed ({request.session.testsfailed}). "
                 f"Keeping Pulumi stack {stack_name} for debugging."
