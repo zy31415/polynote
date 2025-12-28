@@ -17,16 +17,8 @@ def test_create_note_replicates_to_all_nodes(node_a, node_b, node_c):
     node_b.sync_from("A")
     node_c.sync_from("A")
 
-    # # 3. Assert eventual visibility
-    # @eventually(timeout_s=20, interval_s=0.5)
-    # def assert_converged():
-    #     notes_b = node_b.list_notes()
-    #     notes_c = node_c.list_notes()
-    #
-    #     ids_b = {n["id"] for n in notes_b}
-    #     ids_c = {n["id"] for n in notes_c}
-    #
-    #     assert note_id in ids_b
-    #     assert note_id in ids_c
-    #
-    # assert_converged()
+    notes_b = node_b.list_notes()
+    notes_c = node_c.list_notes()
+
+    assert len(notes_b) == 1 and created == notes_b[0]
+    assert len(notes_c) == 1 and created == notes_c[0]
