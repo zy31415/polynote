@@ -37,6 +37,7 @@ class PolyNoteClient:
     def update_note(
         self,
         note_id: str,
+        ts: int,
         *,
         title: Optional[str] = None,
         body: Optional[str] = None,
@@ -47,10 +48,10 @@ class PolyNoteClient:
         if body is not None:
             payload["body"] = body
 
-        return self._put(f"/notes/{note_id}", json=payload)
+        return self._put(f"/notes/{note_id}?ts={ts}", json=payload)
 
-    def delete_note(self, note_id: str) -> None:
-        self._delete(f"/notes/{note_id}")
+    def delete_note(self, note_id: str, ts: int) -> None:
+        self._delete(f"/notes/{note_id}?ts={ts}")
 
     # -----------------------
     # Replication
