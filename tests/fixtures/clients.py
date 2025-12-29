@@ -33,11 +33,11 @@ def node_b(nodes):
 def node_c(nodes):
     return nodes["c"]
 
-@pytest.fixture(autouse=True)
-def reset_polynote_cluster(nodes):
-    """
-    Runs before *every* test function automatically.
-    Keeps tests isolated and order-independent.
-    """
-    for client in nodes.values():
-        client.reset()
+# @pytest.fixture(autouse=True)
+# def reset_polynote_cluster(nodes):
+#     """
+#     Runs before *every* test function automatically.
+#     Keeps tests isolated and order-independent.
+#     """
+#     for client in nodes.values():
+#         client.reset()
