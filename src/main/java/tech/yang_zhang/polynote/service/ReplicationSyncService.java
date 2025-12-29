@@ -91,10 +91,6 @@ public class ReplicationSyncService {
         String oldNodeId = existingNote.updatedBy();
         String newNodeId = entry.nodeId();
 
-        if (oldNodeId.equals(newNodeId)) {
-            throw new IllegalStateException("Log syncing error: Failed to apply UPDATE operation for note as node IDs are the same and this should not happen.");
-        }
-
         if (oldTs.equals(newTs) && oldNodeId.compareTo(newNodeId) < 0) {
             log.info("Update log entry opId={} is not applied, as the Lamport time of existing row ts={} is equal to log ts={} but existing nodeId={} is lexicographically smaller than log nodeId={} (tie-breaker)", entry.opId(), oldTs, newTs, oldNodeId, newNodeId);
             return;
