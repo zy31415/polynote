@@ -63,28 +63,11 @@ class PolyNoteClient:
         """
         return self._put(f"/replication/sync/{remote_node_id}")
 
-    # -----------------------
-    # Network simulation
-    # -----------------------
-
-    def go_offline(self) -> None:
-        self._post("/network/offline")
-
-    def go_online(self) -> None:
-        self._post("/network/online")
-
-    # -----------------------
-    # Debug / Observability
-    # -----------------------
-
-    def debug_state(self) -> Dict[str, Any]:
-        return self._get("/debug/state")
-
-    def debug_replication_log(self) -> List[Dict[str, Any]]:
-        return self._get("/debug/replication-log")
-
-    def debug_conflicts(self) -> List[Dict[str, Any]]:
-        return self._get("/debug/conflicts")
+    def reset(self) -> None:
+        """
+        Reset the node to an empty state.
+        """
+        self._post("/admin/reset")
 
     # -----------------------
     # Internal helpers
