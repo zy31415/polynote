@@ -1,7 +1,10 @@
+import logging
+
 import pytest
 
 from ..polynote_testkit import PolyNoteClient
 
+logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="session")
 def node_client_factory(polynote_env):
@@ -33,11 +36,13 @@ def node_b(nodes):
 def node_c(nodes):
     return nodes["c"]
 
-# @pytest.fixture(autouse=True)
-# def reset_polynote_cluster(nodes):
-#     """
-#     Runs before *every* test function automatically.
-#     Keeps tests isolated and order-independent.
-#     """
-#     for client in nodes.values():
-#         client.reset()
+@pytest.fixture(autouse=True)
+def reset_polynote_cluster(nodes):
+    """
+    Runs before *every* test function automatically.
+    Keeps tests isolated and order-independent.
+    """
+    logger.info("Resetting polynote nodes before test ...")
+    for client in nodes.values():
+        logger.debug("Resetting node %s", client.node_id)
+        client.reset()

@@ -179,4 +179,8 @@ public class NotesDao {
             return result;
         });
     }
+
+    public void reset() {
+        jdbcTemplate.getJdbcTemplate().update("DELETE FROM notes");
+    }
 }

@@ -70,6 +70,10 @@ public class ReplicationLogDao {
         return maxTs != null ? maxTs : 0L;
     }
 
+    public void reset() {
+        jdbcTemplate.getJdbcTemplate().update("DELETE FROM replication_log");
+    }
+
     private ReplicationLogEntry mapRow(ResultSet rs) throws SQLException {
         return new ReplicationLogEntry(
                 rs.getLong("seq"),

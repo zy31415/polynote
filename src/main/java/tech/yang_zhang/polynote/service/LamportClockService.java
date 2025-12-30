@@ -21,4 +21,8 @@ public class LamportClockService {
     public long syncAndTick(long externalTime) {
         return logicalTime.updateAndGet(value -> Math.max(value, externalTime) + 1);
     }
+
+    public void reset() {
+        logicalTime.set(0L);
+    }
 }

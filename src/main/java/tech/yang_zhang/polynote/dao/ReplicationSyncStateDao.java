@@ -54,4 +54,8 @@ public class ReplicationSyncStateDao {
 
         jdbcTemplate.update(sql, params);
     }
+
+    public void reset() {
+        jdbcTemplate.getJdbcTemplate().update("DELETE FROM replication_sync_state");
+    }
 }
