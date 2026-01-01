@@ -36,7 +36,6 @@ By completing PolyNote, you will deeply understand:
 	•	Conflict detection
 	•	Conflict resolution strategies (LWW / CRDT / OT)
 	•	Local-first application design
-	•	Network partitions
 	•	Convergence across distributed replicas
 
 ⸻
@@ -49,7 +48,7 @@ Below is the complete specification you’ll build.
 
 1. 📦 Local Data Store
 
-Each node maintains its own independent local storage (SQLite / H2 / JSON file).
+Each node maintains its own independent local storage (SQLite).
 
 Notes must follow this schema:
 
@@ -89,6 +88,7 @@ Each write increments a local timestamp or logical counter.
 Every write generates a durable log entry:
 
 {
+  "seq": "monotonically increasing integer",
   "op_id": "uuid",
   "ts": "logical timestamp or wall clock",
   "node_id": "A|B|C", 
@@ -99,7 +99,7 @@ Every write generates a durable log entry:
 
 Nodes expose:
 
-GET /replication/log?since=<op_id>
+GET /replication/log?since=<seq>
 
 
 ⸻
@@ -159,45 +159,6 @@ Store:
 <<<< REMOTE VERSION
 ...
 
-
-⸻
-
-7. 📴 Offline Mode (Local-First)
-
-Add endpoints:
-
-POST /network/offline
-POST /network/online
-
-When offline:
-	•	Node continues accepting writes
-	•	Stores operations locally
-	•	Replicates once back online
-
-This simulates mobile apps like 1Password.
-
-⸻
-
-8. 🌉 Simulated Network Partition
-
-Create a script or environment where:
-	•	Node B is partitioned from A and C
-	•	Writes occur independently
-	•	The partition is healed
-	•	System must converge
-
-This demonstrates partition tolerance and recovery.
-
-⸻
-
-9. 🔍 Debug & Observability Endpoints
-
-Add developer-friendly endpoints:
-
-GET /debug/state
-GET /debug/replication-log
-GET /debug/conflicts
-
 ⸻
 
 10. 🎖️ Bonus Features (Advanced)
@@ -228,8 +189,6 @@ A complete test suite should include:
 	•	✔ Create notes on Node A → replicate to B/C
 	•	✔ Update same note concurrently on A/B → conflict → resolve
 	•	✔ Delete on A while updating on B → resolve
-	•	✔ Offline mode: Node B offline → edits → sync later → converge
-	•	✔ Network partition: split B → heal → converge
 	•	✔ Final consistency: all nodes share identical state
 
 ⸻
@@ -241,14 +200,3 @@ Java
 	•	SQLite
 
 ⸻
-
-🏁 Final Notes
-
-PolyNote is designed to be the best practical project for learning:
-	•	Multi-leader replication
-	•	Eventual consistency
-	•	Conflict resolution
-	•	Local-first design
-	•	Offline/online transitions
-	•	Network partitions
-	•	Log-based replication
