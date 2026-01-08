@@ -9,7 +9,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import tech.yang_zhang.polynote.dto.ReplicationLogResponse;
 import tech.yang_zhang.polynote.model.ReplicationLogEntry;
+import tech.yang_zhang.polynote.service.LamportClockService;
 import tech.yang_zhang.polynote.service.ReplicationLogService;
 
 @RestController
@@ -19,17 +21,20 @@ public class ReplicationLogController {
     private static final Logger log = LoggerFactory.getLogger(ReplicationLogController.class);
 
     private final ReplicationLogService replicationLogService;
+    private final LamportClockService lamportClockService;
 
-    public ReplicationLogController(ReplicationLogService replicationLogService) {
+    public ReplicationLogController(ReplicationLogService replicationLogService,
+                                    LamportClockService lamportClockService) {
         this.replicationLogService = replicationLogService;
+        this.lamportClockService = lamportClockService;
     }
 
     @GetMapping("/log")
-    public ResponseEntity<List<ReplicationLogEntry>> getReplicationLog(@RequestParam(name = "since", required = false) Long since) {
+    public ResponseEntity<ReplicationLogResponse> getReplicationLog(@RequestParam(name = "since", required = false) Long since) {
         log.info("GET /replication/log invoked with since={}", since);
         try {
-            List<ReplicationLogEntry> entries = replicationLogService.getReplicationLog(since);
-            return ResponseEntity.ok(entries);
+            ReplicationLogResponse response = replicationLogService.getReplicationLog(since);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }

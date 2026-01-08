@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -15,12 +16,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import tech.yang_zhang.polynote.config.AppEnvironmentProperties;
 import tech.yang_zhang.polynote.dao.ReplicationLogDao;
 import tech.yang_zhang.polynote.dao.ReplicationSyncStateDao;
+import tech.yang_zhang.polynote.dto.ReplicationLogResponse;
 import tech.yang_zhang.polynote.model.Note;
 import tech.yang_zhang.polynote.model.OperationType;
 import tech.yang_zhang.polynote.model.ReplicationLogEntry;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,8 +63,13 @@ public class ReplicationLogService {
         writeEntry(OperationType.UPDATE, note);
     }
 
-    public List<ReplicationLogEntry> getReplicationLog(@Nullable Long since) {
-        return replicationLogDao.findSince(since);
+    public ReplicationLogResponse getReplicationLog(@Nullable Long since) {
+        List<ReplicationLogEntry> entries = replicationLogDao.findSince(since);
+
+        // Before returning the response, we need to tick the Lamport clock to ensure that the timestamp is updated for this event.
+        // todo: This can be moved to middleware layer where Lamport clock is ticked, attached and synced for all time syncing messages.
+        long lamportTimestamp = lamportClockService.tick();
+        return new ReplicationLogResponse(lamportTimestamp, entries);
     }
 
     public void replicationSync(String nodeId) {
@@ -75,7 +81,18 @@ public class ReplicationLogService {
         URI remoteLogUri = buildReplicationLogUri(nodeId, lastSyncedSeq.orElse(null));
 
         log.info("Fetching replication log from nodeId={} at URI={}", nodeId, remoteLogUri);
-        List<ReplicationLogEntry> remoteEntries = fetchRemoteLog(remoteLogUri);
+        ReplicationLogResponse remoteResponse = fetchRemoteLog(remoteLogUri);
+
+        // Sync the Lamport clock with the remote timestamp before processing the logs
+        // todo: This can be moved to middleware layer where Lamport clock is ticked, attached and synced for all time syncing messages.
+        long remoteLamportTimestamp = remoteResponse.lamportTimestamp();
+        log.debug("remoteLamportTimestamp={}", remoteLamportTimestamp);
+
+        long receivedAt = lamportClockService.syncAndTick(remoteLamportTimestamp);
+        log.info("Replication log response from nodeId={} received at time={}", nodeId, receivedAt);
+
+        // Process the logs in order
+        List<ReplicationLogEntry> remoteEntries = remoteResponse.logs();
         if (remoteEntries.isEmpty()) {
             log.info("No new replication entries from nodeId={}", nodeId);
             return;
@@ -86,12 +103,6 @@ public class ReplicationLogService {
         for (ReplicationLogEntry entry : remoteEntries) {
             log.info("Fetched remote seq={} opId={} ts={} noteId={} type={} payload={}",
                     entry.seq(), entry.opId(), entry.ts(), entry.noteId(), entry.type(), entry.payload());
-
-            // Note: the ts here is not recorded in the system but only logged. This ts represents the event of receiving a remote log.
-            //  Technically, it's OK to not tick the clock here.
-            long ts = lamportClockService.syncAndTick(entry.ts());
-            log.info("Remote log opId={} is received at time={}", entry.opId(), ts);
-
             // Process each entry in its own transaction
             latestSeq = replicationSyncService.processReplicationLog(nodeId, entry);
         }
@@ -157,13 +168,14 @@ public class ReplicationLogService {
         return builder.build().toUri();
     }
 
-    private List<ReplicationLogEntry> fetchRemoteLog(URI requestUri) {
+    private ReplicationLogResponse fetchRemoteLog(URI requestUri) {
         try {
-            ReplicationLogEntry[] response = restTemplate.getForObject(requestUri, ReplicationLogEntry[].class);
-            if (response == null || response.length == 0) {
-                return List.of();
+            ReplicationLogResponse response = restTemplate.getForObject(requestUri, ReplicationLogResponse.class);
+            if (response == null) {
+                throw new IllegalStateException("Replication log response is empty");
             }
-            return Arrays.asList(response);
+            List<ReplicationLogEntry> logs = response.logs() == null ? List.of() : response.logs();
+            return new ReplicationLogResponse(response.lamportTimestamp(), logs);
         } catch (RestClientException e) {
             log.error("Failed to fetch replication log from URI={}", requestUri, e);
             throw new IllegalStateException("Unable to fetch replication log from peer", e);

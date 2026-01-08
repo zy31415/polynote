@@ -33,8 +33,6 @@ public class ReplicationSyncService {
 
     }
 
-    // todo: think about if this is truly service code or domain logic code?
-    //  For now, the class exists for the only purpose of transaction management.
     @Transactional
     public long processReplicationLog(String nodeId, ReplicationLogEntry entry) {
         if (appendLog(entry)) {
