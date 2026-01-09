@@ -21,12 +21,9 @@ public class ReplicationLogController {
     private static final Logger log = LoggerFactory.getLogger(ReplicationLogController.class);
 
     private final ReplicationLogService replicationLogService;
-    private final LamportClockService lamportClockService;
 
-    public ReplicationLogController(ReplicationLogService replicationLogService,
-                                    LamportClockService lamportClockService) {
+    public ReplicationLogController(ReplicationLogService replicationLogService) {
         this.replicationLogService = replicationLogService;
-        this.lamportClockService = lamportClockService;
     }
 
     @GetMapping("/log")

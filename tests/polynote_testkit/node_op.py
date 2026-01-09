@@ -3,14 +3,14 @@ from tests.polynote_testkit.client import PolyNoteClient
 from .assertions import assert_notes_equal
 
 
-def create_a_note(node: PolyNoteClient) -> dict:
+def create_note(node: PolyNoteClient) -> dict:
     return node.create_note(
         title="hello polynote",
         body=f"created on node {node.node_id}"
     )
 
 
-def create_a_note_then_update(node: PolyNoteClient, update_count: int):
+def create_note_then_update(node: PolyNoteClient, update_count: int):
     created = node.create_note(
         title="hello polynote",
         body=f"created on node {node.node_id}"
@@ -25,7 +25,7 @@ def create_a_note_then_update(node: PolyNoteClient, update_count: int):
         )
 
 
-def create_a_note_then_update_then_delete(node: PolyNoteClient, update_count: int):
+def create_note_then_update_then_delete(node: PolyNoteClient, update_count: int):
     created = node.create_note(
         title="hello polynote",
         body=f"created on node {node.node_id}"
