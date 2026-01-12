@@ -32,7 +32,8 @@ public class ReplicationLogDao {
                         "node_id TEXT NOT NULL," +
                         "type TEXT NOT NULL," +
                         "note_id TEXT NOT NULL," +
-                        "payload TEXT" +
+                        "payload TEXT," +
+                        "updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))" +
                         ")"
         );
     }
@@ -54,7 +55,7 @@ public class ReplicationLogDao {
     }
 
     public List<ReplicationLogEntry> findSince(@Nullable Long sinceSeqExclusive) {
-        StringBuilder sql = new StringBuilder("SELECT seq, op_id, ts, node_id, type, note_id, payload FROM replication_log");
+        StringBuilder sql = new StringBuilder("SELECT seq, op_id, ts, node_id, type, note_id, payload, updated_at FROM replication_log");
         MapSqlParameterSource params = new MapSqlParameterSource();
         if (sinceSeqExclusive != null) {
             sql.append(" WHERE seq > :sinceSeqExclusive");
@@ -78,11 +79,12 @@ public class ReplicationLogDao {
         return new ReplicationLogEntry(
                 rs.getLong("seq"),
                 rs.getString("op_id"),
-                rs.getLong("ts"),
+                rs.getString("ts"),
                 rs.getString("node_id"),
                 OperationType.valueOf(rs.getString("type")),
                 rs.getString("note_id"),
-                rs.getString("payload")
+                rs.getString("payload"),
+                rs.getLong("updated_at")
         );
     }
 }

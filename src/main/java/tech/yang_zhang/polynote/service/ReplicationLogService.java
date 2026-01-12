@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -111,15 +110,15 @@ public class ReplicationLogService {
                 nodeId, remoteEntries.size(), latestSeq);
     }
 
-    public void recordDelete(Note note, long time) {
-        writeEntry(OperationType.DELETE, note.id(), serialize(note), time);
+    public void recordDelete(Note note, String ts) {
+        writeEntry(OperationType.DELETE, note.id(), serialize(note), ts);
     }
 
     private void writeEntry(OperationType type, Note note) {
-        writeEntry(type, note.id(), serialize(note), note.updatedAt());
+        writeEntry(type, note.id(), serialize(note), note.ts());
     }
 
-    private void writeEntry(OperationType type, String noteId, String payload, Long time) {
+    private void writeEntry(OperationType type, String noteId, String payload, String time) {
         ReplicationLogEntry entry = new ReplicationLogEntry(
                 null,
                 UUID.randomUUID().toString(),
@@ -127,7 +126,8 @@ public class ReplicationLogService {
                 properties.podName(),
                 type,
                 noteId,
-                payload
+                payload,
+                System.currentTimeMillis()
         );
 
         if (!replicationLogDao.insertOrIgnore(entry)) {

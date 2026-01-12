@@ -23,7 +23,8 @@ public class ReplicationSyncStateDao {
         jdbcTemplate.getJdbcTemplate().execute(
                 "CREATE TABLE IF NOT EXISTS replication_sync_state (" +
                         "node_id TEXT PRIMARY KEY," +
-                        "last_synced_seq INTEGER" +
+                        "last_synced_seq INTEGER," +
+                        "updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))" +
                         ")"
         );
     }
@@ -43,16 +44,23 @@ public class ReplicationSyncStateDao {
         String sql = "INSERT INTO replication_sync_state (node_id, last_synced_seq) " +
                 "VALUES (:nodeId, :seq) " +
                 "ON CONFLICT(node_id) DO UPDATE SET " +
-                "last_synced_seq = excluded.last_synced_seq";
+                "last_synced_seq = excluded.last_synced_seq, " +
+                "updated_at = :now"
+                ;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("nodeId", nodeId)
-                .addValue("seq", seq);
+                .addValue("seq", seq)
+                .addValue("now", now());
 
         jdbcTemplate.update(sql, params);
     }
 
     public void reset() {
         jdbcTemplate.getJdbcTemplate().update("DELETE FROM replication_sync_state");
+    }
+
+    private long now() {
+        return Instant.now().toEpochMilli();
     }
 }

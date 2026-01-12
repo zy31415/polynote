@@ -42,7 +42,8 @@ public class NotesService {
                 UUID.randomUUID().toString(),
                 request.title(),
                 request.body(),
-                time,
+                String.valueOf(time),
+                now(),
                 properties.podName(),
                 false
         );
@@ -58,7 +59,8 @@ public class NotesService {
                 id,
                 request.title(),
                 request.body(),
-                time,
+                String.valueOf(time),
+                now(),
                 properties.podName(),
                 false
         );
@@ -78,7 +80,8 @@ public class NotesService {
                 id,
                 request.title(),
                 request.body(),
-                time,
+                String.valueOf(time),
+                now(),
                 properties.podName(),
                 false
         );
@@ -93,12 +96,12 @@ public class NotesService {
 
     @Transactional
     public void deleteNoteAtTs(String id, long ts) {
-        long currentTime = lamportClockService.tick();
-        Note note = notesDao.deleteAndReturn(id, ts, currentTime, properties.podName());
+        long currentTs = lamportClockService.tick();
+        Note note = notesDao.deleteAndReturn(id, ts, currentTs, properties.podName());
         if (note == null) {
             throw new NoteNotFoundException(id);
         }
-        replicationLogService.recordDelete(note, currentTime);
+        replicationLogService.recordDelete(note, String.valueOf(currentTs));
     }
 
     @Transactional
@@ -108,11 +111,15 @@ public class NotesService {
         if (note == null) {
             throw new NoteNotFoundException(id);
         }
-        replicationLogService.recordDelete(note, time);
+        replicationLogService.recordDelete(note, String.valueOf(time));
     }
 
     @Transactional(readOnly = true)
     public java.util.List<Note> listNotes() {
         return notesDao.findAllNonTomestoned();
+    }
+
+    private long now() {
+        return System.currentTimeMillis();
     }
 }

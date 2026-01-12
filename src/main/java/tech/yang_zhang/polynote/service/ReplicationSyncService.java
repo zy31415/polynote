@@ -71,7 +71,7 @@ public class ReplicationSyncService {
     // todo: need to be extensively unit tested
     private void applyUpdate(ReplicationLogEntry entry) {
         String noteId = entry.noteId();
-        Long newTs = entry.ts();
+        Long newTs = Long.getLong(entry.ts());
 
         Note existingNote = notesDao.findById(noteId);
         if  (existingNote == null) {
