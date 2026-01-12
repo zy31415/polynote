@@ -49,5 +49,8 @@ def test_update_conflicts_tie_breaker_update_from_A_win(node_a, node_b):
     note = node_a.list_notes()[0]
     assert note["title"] == "Update from A"
     assert note["body"] == "This is 2st update from node A"
-    assert note["updatedAt"] == 4
+
+    # todo: lamport timestamp vs vector clock
+    assert note["ts"] == '4'
+
     assert note["updatedBy"] == "A"

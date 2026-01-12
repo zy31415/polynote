@@ -16,7 +16,7 @@ def test_update_conflicts_b_has_latest_update(node_a, node_b):
     note = node_a.list_notes()[0]
     assert note["title"] == "Update from B"
     assert note["body"] == "This is an update from node B"
-    assert note["updatedAt"] == 4
+    assert note["ts"] == '4'
     assert note["updatedBy"] == "B"
 
 
@@ -39,7 +39,7 @@ def test_update_conflicts_tie_breaker(node_a, node_b):
     note = node_a.list_notes()[0]
     assert note["title"] == "Update from A"
     assert note["body"] == "This is 2st update from node A"
-    assert note["updatedAt"] == 5
+    assert note["ts"] == '5'
     assert note["updatedBy"] == "A"
 
 
@@ -65,5 +65,5 @@ def test_update_conflicts_a_has_latest_update(node_a, node_b):
     note = node_a.list_notes()[0]
     assert note["title"] == "Update from A"
     assert note["body"] == "This is 3rd update from node A"
-    assert note["updatedAt"] == 6
+    assert note["ts"] == '6'
     assert note["updatedBy"] == "A"

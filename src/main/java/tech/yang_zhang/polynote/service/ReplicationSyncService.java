@@ -71,7 +71,9 @@ public class ReplicationSyncService {
     // todo: need to be extensively unit tested
     private void applyUpdate(ReplicationLogEntry entry) {
         String noteId = entry.noteId();
-        Long newTs = Long.getLong(entry.ts());
+
+        // todo: Lamport ts vs vector ts
+        Long newTs = Long.parseLong(entry.ts());
 
         Note existingNote = notesDao.findById(noteId);
         if  (existingNote == null) {
@@ -79,7 +81,8 @@ public class ReplicationSyncService {
             throw new IllegalStateException("Log syncing error: Failed to apply UPDATE operation for note " + noteId + " because we cannot find the note.");
         }
 
-        Long oldTs = existingNote.updatedAt();
+        // todo: Lamport ts vs vector ts
+        Long oldTs = Long.parseLong(existingNote.ts());
 
         if (oldTs > newTs) {
             log.info("Update log entry opId={} is not applied, as the Lamport time of existing row ts={} is greater then log ts={}", entry.opId(), oldTs, newTs);
