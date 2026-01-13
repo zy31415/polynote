@@ -1,13 +1,18 @@
+from typing import Optional
+
 from tests.polynote_testkit.client import PolyNoteClient
 
 from .assertions import assert_notes_equal
 
 
-def create_note(node: PolyNoteClient) -> dict:
-    return node.create_note(
-        title="hello polynote",
-        body=f"created on node {node.node_id}"
-    )
+def create_note(node: PolyNoteClient, title: Optional[str] = None, body: Optional[str] = None) -> dict:
+    if title is None:
+        title = "hello polynote"
+
+    if body is None:
+        body = f"created on node {node.node_id}"
+
+    return node.create_note(title=title, body=body)
 
 
 def create_note_then_update(node: PolyNoteClient, update_count: int):
